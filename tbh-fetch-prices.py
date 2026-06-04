@@ -72,8 +72,32 @@ def main():
     dj = os.path.join(HERE, "tbh-data.json")
     d = json.load(open(dj, encoding="utf-8"))
     d["equipment"] = equip
+
+    # アイテム画像: Steam公式アイコン(icon_url)を「アイコンID(sha)→url」表に集約し、各itemにiconID付与（ダウンロード不要・CDN参照）
+    import hashlib
+    icon_by_hash = {it["hash_name"]: it["icon_url"] for it in items if it.get("icon_url")}
+    GT2 = {"COMMON":"Common","UNCOMMON":"Uncommon","RARE":"Rare","LEGENDARY":"Legendary","IMMORTAL":"Immortal","ARCANA":"Arcana","CELESTIAL":"Celestial","COSMIC":"Cosmic","DIVINE":"Divine","BEYOND":"Beyond"}
+    icon_by_bg = {}
+    for it in items:
+        mm = re.match(r"^(.*) \(([^)]+)\)", it["hash_name"])
+        if mm and it.get("icon_url"): icon_by_bg.setdefault(mm.group(1)+"|"+mm.group(2), it["icon_url"])
+    icons = {}
+    def _sid(u): return hashlib.sha1(u.encode()).hexdigest()[:16]
+    def _attach(x, url):
+        if not url: return
+        s = _sid(url); x["icon"] = s; icons[s] = url
+    for g in d["gems"]: _attach(g, icon_by_hash.get(g.get("nameEn")))
+    for e in d["engravings"]: _attach(e, icon_by_hash.get(e.get("nameEn")))
+    for s in d["inscriptions"]["scrolls"]: _attach(s, icon_by_hash.get(s.get("nameEn")))
+    for e in equip: _attach(e, icon_by_hash.get(e.get("nameEn")))
+    if d.get("uniqueMods"):
+        for it2 in d["uniqueMods"]["items"]:
+            _attach(it2, icon_by_bg.get(it2.get("nameEn")+"|"+GT2.get(it2.get("gradeEn"), it2.get("grade"))))
+    d["icons"] = icons
+    d.setdefault("_meta", {})["iconCdn"] = "https://community.akamai.steamstatic.com/economy/image/"
+
     json.dump(d, open(dj, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
-    print("rebuilt equipment:", len(equip))
+    print("rebuilt equipment:", len(equip), "| icons:", len(icons))
 
     # inject DATA + PRICES into HTML tools
     dcompact = json.dumps(d, ensure_ascii=False, separators=(",", ":"))
