@@ -118,6 +118,15 @@
     <select id="dmgType"><option value="物理ダメージ" selected>物理</option><option value="火炎ダメージ">火炎</option><option value="冷気ダメージ">冷気</option><option value="雷ダメージ">雷</option><option value="カオスダメージ">カオス</option></select></label>
 </div>
 
+<div id="aiPanel" style="display:none;">
+<h2>AIにビルドを考えてもらう（このデバイスのみ）</h2>
+<div class="savebar">
+  <input type="text" id="aiReq" placeholder="例: 物理レンジャーでDPS最大化／クリ特化で耐久も少し">
+  <button class="primary" id="aiGo">AIに考えてもらう</button>
+</div>
+<div class="hint" id="aiNote" style="min-height:16px;">ローカルAIサーバ（tbh-ai-server.py）が起動しているこの端末でだけ表示されます。現在のビルドを渡して提案を盛り欄に反映します。</div>
+</div>
+
 <h2>部位ごとの盛りステータス（装飾・刻印・固有効果などの合計を直接入力）</h2>
 <div class="hint" style="margin:0 0 8px;">各部位に「＋ステータス」で行を足し、ステータスを選んで数値を入力（例: 武器に攻撃速度 5）。同じ効果が複数あるときは右の「×個数」を増やせばまとめて計上できます。<b>「現在のステータス」が既に装備込みなら、ここはその上に乗る差分のみ</b>入れてください。比較用途なので基礎値の二重計上に注意。</div>
 <table class="slots"><thead><tr><th style="width:130px;">部位</th><th>盛りステータス</th></tr></thead><tbody id="slotBody"></tbody></table>
@@ -443,9 +452,50 @@ $('reset').onclick=()=>{ if(!confirm('現在の入力を初期化しますか？
 // ---- warning text ----
 $('warn').innerHTML='⚠ 「現在のステータス」はキャラシート値（装備込み）です。部位ごとの盛りステータスは<b>その上に追加で乗る差分</b>として計算されます（基礎にすでに含まれている装備分を二重に入れないよう注意）。本ツールはビルド比較が目的で、各装飾の正確な数値は宝石名から引かず手入力します。レンジャー以外のDPS式は共通式の流用で未検証です。';
 
+// ---- local AI assist (このデバイスのみ・tbh-ai-server.py 経由) ----
+const AI_BASE = (location.port==='8765') ? '' : 'http://localhost:8765';
+async function aiHealth(){
+  try{
+    const c=new AbortController(); const t=setTimeout(()=>c.abort(),1500);
+    const r=await fetch(AI_BASE+'/health',{signal:c.signal}); clearTimeout(t);
+    if(r.ok) $('aiPanel').style.display='';
+  }catch(e){/* サーバ未起動 → AIパネルは出さない */}
+}
+function applyAIResult(obj){
+  if(obj.base && typeof obj.base==='object'){
+    Object.keys(obj.base).forEach(id=>{ if($(id) && obj.base[id]!=null) $(id).value=obj.base[id]; });
+  }
+  if(obj.slotStats && typeof obj.slotStats==='object'){
+    const ns={};
+    Object.keys(obj.slotStats).forEach(k=>{
+      const arr=obj.slotStats[k]; if(!Array.isArray(arr)) return;
+      ns[k]=arr.filter(x=>x && DPS_STATS.includes(x.stat))
+               .map(x=>({stat:String(x.stat), val:(x.val==null?'':x.val), cnt:(x.cnt==null?1:x.cnt)}));
+    });
+    state.slotStats=ns;
+  }
+  buildSlots(); calc();
+}
+async function aiGo(){
+  const btn=$('aiGo'), note=$('aiNote'); const old=btn.textContent;
+  btn.disabled=true; btn.textContent='考え中…'; note.textContent='';
+  try{
+    const payload={ base:{}, buff:$('buff').checked, buffLv:$('buffLv').value, dmgType:$('dmgType').value,
+      cls:(DATA.classes[state.cls||0]||{}).name, slotStats:state.slotStats, request:$('aiReq').value.trim() };
+    ['ad','adc','as','asc','cc','ccc','cd','cdc'].forEach(id=>payload.base[id]=$(id).value);
+    const r=await fetch(AI_BASE+'/optimize',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const obj=await r.json();
+    if(obj.error){ note.innerHTML='<span class="down">エラー: '+obj.error+'</span>'; }
+    else { applyAIResult(obj); note.textContent=obj.note||'反映しました'; }
+  }catch(e){ note.innerHTML='<span class="down">接続できませんでした（tbh-ai-server.py 未起動？）</span>'; }
+  finally{ btn.disabled=false; btn.textContent=old; }
+}
+$('aiGo').onclick=aiGo;
+
 // ---- init ----
 applySnapshot(load());
 buildClasses(); showClass(); buildSlots(); refreshLoadSel(); refreshCmpSel(); calc(); renderCompare();
+aiHealth();
 </script>
 <script src="analytics.js"></script>
 </body>
