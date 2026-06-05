@@ -29,11 +29,20 @@ def main():
         time.sleep(1.0)  # be polite
     print("collected", len(items))
 
+    # アップデートでSteam市場の負荷軽減のため (1)レジェンダリー未満の装備 (2)「B」ロール全種 は削除済み。
+    # tbh-market.com の集計は追従が遅く古い(削除済み)リスティングを残すため、ここで除外する。
+    SUBLEG = ("(Common)", "(Uncommon)", "(Rare)")
+    def is_dead_listing(hn):
+        if any(s in hn for s in SUBLEG): return True          # レジェンダリー未満 = 削除済み
+        if re.search(r" \([^)]+\) B$", hn): return True       # 「B」ロール = 削除済み(Aに一本化)
+        return False
+
     prices = {}
     latest = 0
     for it in items:
         hn = it.get("hash_name")
         if not hn: continue
+        if is_dead_listing(hn): continue
         prices[hn] = {
             "sell": it.get("sell_price"), "median": it.get("median_price"),
             "listings": it.get("sell_listings"), "volume": it.get("volume"),

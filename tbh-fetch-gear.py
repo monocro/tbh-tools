@@ -74,6 +74,7 @@ def main():
         en = me.get("nameEn")
         if not en: continue
         gradeT = GT.get(me["grade"], me["grade"]); gear = me["gear"]; cat = CAT.get(gear, "weapon")
+        if gradeT in ("Common", "Uncommon", "Rare"): continue  # レジェンダリー未満はアップデートでSteam市場から削除済み
         key = (en, gradeT, gear, me["level"]); s = STATS.get(k, {}); ih = s.get("inherent", [])
         if key in seen and not (ih and not seen[key]["stats"]): continue
         stl = []; b0 = s.get("base") or 0
