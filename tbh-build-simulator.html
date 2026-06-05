@@ -36,8 +36,10 @@
   .gemcell{min-width:220px;}
   .statline{display:flex;gap:6px;align-items:center;margin-bottom:5px;}
   .statline select{width:auto;flex:1;min-width:120px;}
-  .statline input{width:88px;text-align:right;}
+  .statline input{width:78px;text-align:right;}
+  .statline input.cnt{width:50px;}
   .statline .unit{color:var(--muted);font-size:12px;width:12px;flex:0 0 auto;}
+  .statline .mul{color:var(--muted);font-size:12px;flex:0 0 auto;}
   .xbtn{padding:4px 9px;color:var(--muted);line-height:1;border-radius:5px;flex:0 0 auto;}
   .xbtn:hover{border-color:var(--down);color:var(--down);}
   .addbtn{font-size:12px;padding:5px 11px;color:var(--accent);border-style:dashed;}
@@ -117,7 +119,7 @@
 </div>
 
 <h2>部位ごとの盛りステータス（装飾・刻印・固有効果などの合計を直接入力）</h2>
-<div class="hint" style="margin:0 0 8px;">各部位に「＋ステータス」で行を足し、ステータスを選んで数値を入力（例: 武器に攻撃速度 5）。<b>「現在のステータス」が既に装備込みなら、ここはその上に乗る差分のみ</b>入れてください。比較用途なので基礎値の二重計上に注意。</div>
+<div class="hint" style="margin:0 0 8px;">各部位に「＋ステータス」で行を足し、ステータスを選んで数値を入力（例: 武器に攻撃速度 5）。同じ効果が複数あるときは右の「×個数」を増やせばまとめて計上できます。<b>「現在のステータス」が既に装備込みなら、ここはその上に乗る差分のみ</b>入れてください。比較用途なので基礎値の二重計上に注意。</div>
 <table class="slots"><thead><tr><th style="width:130px;">部位</th><th>盛りステータス</th></tr></thead><tbody id="slotBody"></tbody></table>
 
 <h2>結果</h2>
@@ -176,8 +178,9 @@ function collectContribs(){
     (state.slotStats[si]||[]).forEach(ln=>{
       if(!ln || !ln.stat) return;
       const val = parseFloat(ln.val) || 0;
-      if(val===0) return;
-      out.push({ stat:ln.stat, value:val });
+      const cnt = ln.cnt==null ? 1 : (parseFloat(ln.cnt) || 0);
+      if(val===0 || cnt===0) return;
+      out.push({ stat:ln.stat, value:val*cnt });
     });
   });
   return out;
@@ -216,14 +219,18 @@ function renderSlotCell(td, si){
     const num=document.createElement('input'); num.type='number'; num.step='1'; num.placeholder='0';
     num.value=(ln.val!=null?ln.val:'');
     const u=document.createElement('span'); u.className='unit'; u.textContent=ln.stat?unitOf(ln.stat):'';
+    const mul=document.createElement('span'); mul.className='mul'; mul.textContent='×';
+    const cnt=document.createElement('input'); cnt.type='number'; cnt.step='1'; cnt.min='1'; cnt.className='cnt'; cnt.title='個数';
+    cnt.value=(ln.cnt!=null?ln.cnt:1);
     const del=document.createElement('button'); del.type='button'; del.className='xbtn'; del.textContent='×'; del.title='この行を削除';
     ssel.onchange=()=>{ ln.stat=ssel.value; u.textContent=ln.stat?unitOf(ln.stat):''; calc(); };
     num.oninput=()=>{ ln.val=num.value; calc(); };
+    cnt.oninput=()=>{ ln.cnt=cnt.value; calc(); };
     del.onclick=()=>{ lines.splice(li,1); renderSlotCell(td,si); calc(); };
-    row.append(ssel,num,u,del); td.appendChild(row);
+    row.append(ssel,num,u,mul,cnt,del); td.appendChild(row);
   });
   const add=document.createElement('button'); add.type='button'; add.className='addbtn'; add.textContent='＋ ステータス';
-  add.onclick=()=>{ lines.push({stat:'',val:''}); renderSlotCell(td,si); };
+  add.onclick=()=>{ lines.push({stat:'',val:'',cnt:1}); renderSlotCell(td,si); };
   td.appendChild(add);
 }
 
@@ -333,8 +340,10 @@ function evalSnap(snap){
   const contribs=[];
   DATA.slots.forEach((slot,si)=>{
     ((st.slotStats&&st.slotStats[si])||[]).forEach(ln=>{
-      if(!ln||!ln.stat) return; const val=parseFloat(ln.val)||0; if(val===0) return;
-      contribs.push({ stat:ln.stat, value:val });
+      if(!ln||!ln.stat) return;
+      const val=parseFloat(ln.val)||0; const cnt=ln.cnt==null?1:(parseFloat(ln.cnt)||0);
+      if(val===0||cnt===0) return;
+      contribs.push({ stat:ln.stat, value:val*cnt });
     });
   });
   const bucket=bucketize(contribs);
