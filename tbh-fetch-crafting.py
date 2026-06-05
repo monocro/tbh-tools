@@ -111,6 +111,13 @@ def main():
             # result.itemsByGrade(産出装備の数値ID)は equipment レコードに id が無く紐付かないため非収録
         })
 
+    # 実機補正: probonk は tier5 を Lv40-40 と返すが、tier4(30-40)とtier6(50-65)の間で
+    # Lv41-49 が欠落する。実機ではtier5は Lv40~50 帯なので levelMax を 50 に補正（実機の値を優先）。
+    LEVELMAX_FIX = {5: 50}
+    for rc in recipes:
+        if rc["tier"] in LEVELMAX_FIX:
+            rc["levelMax"] = LEVELMAX_FIX[rc["tier"]]
+
     # tier -> level範囲(全装備種で共通。検証して1つに畳む)
     tier_lv = {}
     for rc in recipes:

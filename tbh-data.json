@@ -85805,7 +85805,7 @@
         "category": "weapon",
         "tier": 5,
         "levelMin": 40,
-        "levelMax": 40,
+        "levelMax": 50,
         "materials": [
           {
             "id": 142002,
@@ -85853,7 +85853,7 @@
         "category": "offhand",
         "tier": 5,
         "levelMin": 40,
-        "levelMax": 40,
+        "levelMax": 50,
         "materials": [
           {
             "id": 142001,
@@ -85910,7 +85910,7 @@
         "category": "armor",
         "tier": 5,
         "levelMin": 40,
-        "levelMax": 40,
+        "levelMax": 50,
         "materials": [
           {
             "id": 142001,
@@ -85958,7 +85958,7 @@
         "category": "armor",
         "tier": 5,
         "levelMin": 40,
-        "levelMax": 40,
+        "levelMax": 50,
         "materials": [
           {
             "id": 142001,
@@ -86006,7 +86006,7 @@
         "category": "armor",
         "tier": 5,
         "levelMin": 40,
-        "levelMax": 40,
+        "levelMax": 50,
         "materials": [
           {
             "id": 142001,
@@ -86054,7 +86054,7 @@
         "category": "armor",
         "tier": 5,
         "levelMin": 40,
-        "levelMax": 40,
+        "levelMax": 50,
         "materials": [
           {
             "id": 142001,
@@ -86102,7 +86102,7 @@
         "category": "accessory",
         "tier": 5,
         "levelMin": 40,
-        "levelMax": 40,
+        "levelMax": 50,
         "materials": [
           {
             "id": 143002,
@@ -87219,7 +87219,7 @@
       {
         "tier": 5,
         "levelMin": 40,
-        "levelMax": 40
+        "levelMax": 50
       },
       {
         "tier": 6,
