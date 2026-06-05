@@ -24,7 +24,8 @@
       "inscription": "刻印(碑文) — 巻物で大量プールから1効果をランダム付与。Cube Lv25/アルカナ以上(英語版)"
     },
     "iconCdn": "https://community.akamai.steamstatic.com/economy/image/",
-    "equipStatNote": "装備ステータスはprobonk(ゲーム内部)由来を実機表示にスケール: %系(攻撃速度/クリ等)とADDITIVE/MULT=÷10して整数%、毎秒HP回復=÷100、実数系(防御/HP/移動/攻撃)はそのまま。"
+    "equipStatNote": "装備ステータスはprobonk(ゲーム内部)由来を実機表示にスケール: %系(攻撃速度/クリ等)とADDITIVE/MULT=÷10して整数%、毎秒HP回復=÷100、実数系(防御/HP/移動/攻撃)はそのまま。",
+    "enemyStageNote": "enemies/stages は probonk(実機データマイン)由来。敵の atk/hp は基準値で各ステージの実値は level に応じてスケールする。element はスキルの DamageType から導出した分のみ(残りは null=未確認)。difficulty: NORMAL/NIGHTMARE/HELL/TORMENT。type ACTBOSS=章ボスステージ。"
   },
   "classes": [
     {
@@ -73107,5 +73108,2726 @@
     "2168c4dd94d82e99": "eBLtYAl6ntbtQ8HLU9Nwq_spna9pYjVMElAg-FGKLvMFaUQ2uz-HsJlFTNVZOSI4yUeg0eXcCPhXZzfazkqRUCSiP02LVlYOnw",
     "65d0c22768196e3c": "eBLtYAl6ntbtQ8HLU9Nwq_spna9pYjVMElAg-FGKLvMFaUQ2uz-HsItAUNxQKSI6yUeg0eLcCPhX834w77U",
     "83808ab880351f73": "eBLtYAl6ntbtQ8HLU9Nwq_spna9pYjVMElAg-FGKLvMFaUQ2uz-HsJlFTNVZOSI4yUeg0OfcCPhXZzfazkqRUCSiP01lH8s7RA"
-  }
+  },
+  "enemies": [
+    {
+      "key": 10011,
+      "nameEn": "Slime",
+      "nameJa": "スライム",
+      "type": "MONSTER",
+      "atk": 10,
+      "atkSpeed": 40,
+      "hp": 50,
+      "moveSpeed": 110,
+      "gold": 10,
+      "exp": 10,
+      "skillKey": 100111,
+      "element": "physical",
+      "stageCount": 16
+    },
+    {
+      "key": 10021,
+      "nameEn": "Goblin",
+      "nameJa": "ゴブリン",
+      "type": "MONSTER",
+      "atk": 15,
+      "atkSpeed": 50,
+      "hp": 35,
+      "moveSpeed": 170,
+      "gold": 12,
+      "exp": 12,
+      "skillKey": 100211,
+      "element": "physical",
+      "stageCount": 20
+    },
+    {
+      "key": 10022,
+      "nameEn": "Goblin Thief",
+      "nameJa": "ゴブリンシーフ",
+      "type": "MONSTER",
+      "atk": 10,
+      "atkSpeed": 110,
+      "hp": 45,
+      "moveSpeed": 280,
+      "gold": 15,
+      "exp": 15,
+      "skillKey": 100221,
+      "element": "physical",
+      "stageCount": 16
+    },
+    {
+      "key": 10023,
+      "nameEn": "Goblin Shaman",
+      "nameJa": "ゴブリンシャーマン",
+      "type": "MONSTER",
+      "atk": 18,
+      "atkSpeed": 70,
+      "hp": 30,
+      "moveSpeed": 135,
+      "gold": 20,
+      "exp": 20,
+      "skillKey": 100231,
+      "element": "fire",
+      "stageCount": 16
+    },
+    {
+      "key": 10031,
+      "nameEn": "Bat",
+      "nameJa": "コウモリ",
+      "type": "MONSTER",
+      "atk": 10,
+      "atkSpeed": 90,
+      "hp": 15,
+      "moveSpeed": 500,
+      "gold": 10,
+      "exp": 5,
+      "skillKey": 100311,
+      "element": "physical",
+      "stageCount": 20
+    },
+    {
+      "key": 10041,
+      "nameEn": "Orc",
+      "nameJa": "オーク",
+      "type": "MONSTER",
+      "atk": 14,
+      "atkSpeed": 80,
+      "hp": 65,
+      "moveSpeed": 185,
+      "gold": 15,
+      "exp": 15,
+      "skillKey": 100411,
+      "element": "physical",
+      "stageCount": 13
+    },
+    {
+      "key": 10042,
+      "nameEn": "Orc Warrior",
+      "nameJa": "オークウォリアー",
+      "type": "MONSTER",
+      "atk": 16,
+      "atkSpeed": 75,
+      "hp": 95,
+      "moveSpeed": 165,
+      "gold": 20,
+      "exp": 20,
+      "skillKey": 100421,
+      "element": "physical",
+      "stageCount": 13
+    },
+    {
+      "key": 10043,
+      "nameEn": "Elite Orc",
+      "nameJa": "エリートオーク",
+      "type": "MONSTER",
+      "atk": 17,
+      "atkSpeed": 65,
+      "hp": 185,
+      "moveSpeed": 120,
+      "gold": 35,
+      "exp": 35,
+      "skillKey": 100431,
+      "element": "physical",
+      "stageCount": 10
+    },
+    {
+      "key": 10051,
+      "nameEn": "Skeleton",
+      "nameJa": "スケルトン",
+      "type": "MONSTER",
+      "atk": 20,
+      "atkSpeed": 80,
+      "hp": 50,
+      "moveSpeed": 220,
+      "gold": 10,
+      "exp": 11,
+      "skillKey": 100511,
+      "element": "physical",
+      "stageCount": 13
+    },
+    {
+      "key": 10052,
+      "nameEn": "Skeleton Archer",
+      "nameJa": "スケルトンアーチャー",
+      "type": "MONSTER",
+      "atk": 20,
+      "atkSpeed": 80,
+      "hp": 35,
+      "moveSpeed": 150,
+      "gold": 10,
+      "exp": 13,
+      "skillKey": 100521,
+      "element": "physical",
+      "stageCount": 17
+    },
+    {
+      "key": 10053,
+      "nameEn": "Skeleton Warrior",
+      "nameJa": "スケルトンウォリアー",
+      "type": "MONSTER",
+      "atk": 20,
+      "atkSpeed": 80,
+      "hp": 90,
+      "moveSpeed": 160,
+      "gold": 30,
+      "exp": 30,
+      "skillKey": 100531,
+      "element": "physical",
+      "stageCount": 9
+    },
+    {
+      "key": 10901,
+      "nameEn": "Skeleton King",
+      "nameJa": "スケルトンキング",
+      "type": "MONSTER",
+      "atk": 50,
+      "atkSpeed": 115,
+      "hp": 1050,
+      "moveSpeed": 110,
+      "gold": 500,
+      "exp": 36,
+      "skillKey": "109011 109021",
+      "element": null,
+      "stageCount": 1
+    },
+    {
+      "key": 10902,
+      "nameEn": "Skeleton King",
+      "nameJa": "スケルトンキング",
+      "type": "MONSTER",
+      "atk": 70,
+      "atkSpeed": 130,
+      "hp": 2350,
+      "moveSpeed": 120,
+      "gold": 500,
+      "exp": 12,
+      "skillKey": "109011 109021 109031",
+      "element": null,
+      "stageCount": 1
+    },
+    {
+      "key": 10903,
+      "nameEn": "Skeleton King",
+      "nameJa": "スケルトンキング",
+      "type": "MONSTER",
+      "atk": 70,
+      "atkSpeed": 130,
+      "hp": 2350,
+      "moveSpeed": 120,
+      "gold": 500,
+      "exp": 18,
+      "skillKey": "109011 109021 109031 109041",
+      "element": null,
+      "stageCount": 1
+    },
+    {
+      "key": 10904,
+      "nameEn": "Skeleton King",
+      "nameJa": "スケルトンキング",
+      "type": "MONSTER",
+      "atk": 70,
+      "atkSpeed": 130,
+      "hp": 2350,
+      "moveSpeed": 120,
+      "gold": 500,
+      "exp": 15,
+      "skillKey": "109011 109021 109031 109041 109051",
+      "element": null,
+      "stageCount": 1
+    },
+    {
+      "key": 20011,
+      "nameEn": "Scorpion",
+      "nameJa": "サソリ",
+      "type": "MONSTER",
+      "atk": 10,
+      "atkSpeed": 40,
+      "hp": 50,
+      "moveSpeed": 110,
+      "gold": 10,
+      "exp": 10,
+      "skillKey": 200111,
+      "element": null,
+      "stageCount": 24
+    },
+    {
+      "key": 20021,
+      "nameEn": "Ratfolk Warrior",
+      "nameJa": "ラット族戦士",
+      "type": "MONSTER",
+      "atk": 15,
+      "atkSpeed": 50,
+      "hp": 35,
+      "moveSpeed": 230,
+      "gold": 12,
+      "exp": 12,
+      "skillKey": 200211,
+      "element": null,
+      "stageCount": 23
+    },
+    {
+      "key": 20022,
+      "nameEn": "Ratfolk Archer",
+      "nameJa": "ラット族弓兵",
+      "type": "MONSTER",
+      "atk": 10,
+      "atkSpeed": 110,
+      "hp": 45,
+      "moveSpeed": 280,
+      "gold": 15,
+      "exp": 15,
+      "skillKey": 200221,
+      "element": null,
+      "stageCount": 12
+    },
+    {
+      "key": 20023,
+      "nameEn": "Plague Rat",
+      "nameJa": "疫病ネズミ",
+      "type": "MONSTER",
+      "atk": 20,
+      "atkSpeed": 70,
+      "hp": 110,
+      "moveSpeed": 130,
+      "gold": 20,
+      "exp": 20,
+      "skillKey": 200231,
+      "element": null,
+      "stageCount": 23
+    },
+    {
+      "key": 20024,
+      "nameEn": "Ratfolk Berserker",
+      "nameJa": "ラット族バーサーカー",
+      "type": "MONSTER",
+      "atk": 17,
+      "atkSpeed": 150,
+      "hp": 75,
+      "moveSpeed": 500,
+      "gold": 25,
+      "exp": 25,
+      "skillKey": 200241,
+      "element": null,
+      "stageCount": 19
+    },
+    {
+      "key": 20031,
+      "nameEn": "Cobra",
+      "nameJa": "コブラ",
+      "type": "MONSTER",
+      "atk": 18,
+      "atkSpeed": 115,
+      "hp": 55,
+      "moveSpeed": 165,
+      "gold": 15,
+      "exp": 15,
+      "skillKey": 200311,
+      "element": null,
+      "stageCount": 23
+    },
+    {
+      "key": 20041,
+      "nameEn": "Venom Insect",
+      "nameJa": "毒虫",
+      "type": "MONSTER",
+      "atk": 23,
+      "atkSpeed": 130,
+      "hp": 45,
+      "moveSpeed": 320,
+      "gold": 15,
+      "exp": 15,
+      "skillKey": 200411,
+      "element": null,
+      "stageCount": 21
+    },
+    {
+      "key": 20042,
+      "nameEn": "Venom Lord",
+      "nameJa": "猛毒の君主",
+      "type": "MONSTER",
+      "atk": 15,
+      "atkSpeed": 55,
+      "hp": 75,
+      "moveSpeed": 220,
+      "gold": 35,
+      "exp": 35,
+      "skillKey": 200421,
+      "element": null,
+      "stageCount": 5
+    },
+    {
+      "key": 20051,
+      "nameEn": "Giant Fly",
+      "nameJa": "巨大バエ",
+      "type": "MONSTER",
+      "atk": 20,
+      "atkSpeed": 120,
+      "hp": 45,
+      "moveSpeed": 440,
+      "gold": 11,
+      "exp": 11,
+      "skillKey": 200511,
+      "element": null,
+      "stageCount": 8
+    },
+    {
+      "key": 20061,
+      "nameEn": "Kobold Guard",
+      "nameJa": "コボルト衛兵",
+      "type": "MONSTER",
+      "atk": 20,
+      "atkSpeed": 80,
+      "hp": 90,
+      "moveSpeed": 250,
+      "gold": 17,
+      "exp": 17,
+      "skillKey": 200611,
+      "element": null,
+      "stageCount": 23
+    },
+    {
+      "key": 20062,
+      "nameEn": "Kobold Slinger",
+      "nameJa": "コボルト投石兵",
+      "type": "MONSTER",
+      "atk": 23,
+      "atkSpeed": 110,
+      "hp": 80,
+      "moveSpeed": 180,
+      "gold": 14,
+      "exp": 14,
+      "skillKey": 200621,
+      "element": null,
+      "stageCount": 8
+    },
+    {
+      "key": 20071,
+      "nameEn": "Homunculus",
+      "nameJa": "ホムンクルス",
+      "type": "MONSTER",
+      "atk": 16,
+      "atkSpeed": 80,
+      "hp": 115,
+      "moveSpeed": 340,
+      "gold": 13,
+      "exp": 13,
+      "skillKey": 200711,
+      "element": null,
+      "stageCount": 23
+    },
+    {
+      "key": 20081,
+      "nameEn": "Ghoul",
+      "nameJa": "グール",
+      "type": "MONSTER",
+      "atk": 20,
+      "atkSpeed": 60,
+      "hp": 225,
+      "moveSpeed": 110,
+      "gold": 45,
+      "exp": 45,
+      "skillKey": 200811,
+      "element": null,
+      "stageCount": 19
+    },
+    {
+      "key": 20091,
+      "nameEn": "Fire Elemental",
+      "nameJa": "火の精霊",
+      "type": "MONSTER",
+      "atk": 25,
+      "atkSpeed": 80,
+      "hp": 75,
+      "moveSpeed": 160,
+      "gold": 23,
+      "exp": 23,
+      "skillKey": 200911,
+      "element": null,
+      "stageCount": 8
+    },
+    {
+      "key": 20111,
+      "nameEn": "Mummy",
+      "nameJa": "ミイラ",
+      "type": "MONSTER",
+      "atk": 17,
+      "atkSpeed": 80,
+      "hp": 260,
+      "moveSpeed": 80,
+      "gold": 30,
+      "exp": 30,
+      "skillKey": 201111,
+      "element": null,
+      "stageCount": 15
+    },
+    {
+      "key": 20121,
+      "nameEn": "Tick",
+      "nameJa": "ダニ",
+      "type": "MONSTER",
+      "atk": 10,
+      "atkSpeed": 140,
+      "hp": 55,
+      "moveSpeed": 400,
+      "gold": 7,
+      "exp": 7,
+      "skillKey": 201211,
+      "element": "physical",
+      "stageCount": 0
+    },
+    {
+      "key": 20901,
+      "nameEn": "Desert Overlord",
+      "nameJa": "砂漠の支配者",
+      "type": "MONSTER",
+      "atk": 80,
+      "atkSpeed": 170,
+      "hp": 1850,
+      "moveSpeed": 120,
+      "gold": 500,
+      "exp": 12,
+      "skillKey": "209011 209021",
+      "element": null,
+      "stageCount": 1
+    },
+    {
+      "key": 20902,
+      "nameEn": "Desert Overlord",
+      "nameJa": "砂漠の支配者",
+      "type": "MONSTER",
+      "atk": 100,
+      "atkSpeed": 170,
+      "hp": 1950,
+      "moveSpeed": 120,
+      "gold": 500,
+      "exp": 14,
+      "skillKey": "209011 209021 209031",
+      "element": null,
+      "stageCount": 1
+    },
+    {
+      "key": 20903,
+      "nameEn": "Desert Overlord",
+      "nameJa": "砂漠の支配者",
+      "type": "MONSTER",
+      "atk": 120,
+      "atkSpeed": 170,
+      "hp": 2050,
+      "moveSpeed": 120,
+      "gold": 500,
+      "exp": 31,
+      "skillKey": "209011 209021 209031 209041",
+      "element": null,
+      "stageCount": 1
+    },
+    {
+      "key": 20904,
+      "nameEn": "Desert Overlord",
+      "nameJa": "砂漠の支配者",
+      "type": "MONSTER",
+      "atk": 140,
+      "atkSpeed": 170,
+      "hp": 2350,
+      "moveSpeed": 120,
+      "gold": 500,
+      "exp": 31,
+      "skillKey": "209011 209021 209031 209041 209051",
+      "element": null,
+      "stageCount": 1
+    },
+    {
+      "key": 30011,
+      "nameEn": "Gremlin",
+      "nameJa": "グレムリン",
+      "type": "MONSTER",
+      "atk": 10,
+      "atkSpeed": 60,
+      "hp": 70,
+      "moveSpeed": 300,
+      "gold": 10,
+      "exp": 10,
+      "skillKey": 300111,
+      "element": null,
+      "stageCount": 12
+    },
+    {
+      "key": 30012,
+      "nameEn": "Geonid",
+      "nameJa": "ジオニド",
+      "type": "MONSTER",
+      "atk": 15,
+      "atkSpeed": 90,
+      "hp": 50,
+      "moveSpeed": 300,
+      "gold": 12,
+      "exp": 12,
+      "skillKey": 300121,
+      "element": null,
+      "stageCount": 11
+    },
+    {
+      "key": 30013,
+      "nameEn": "Fallen Angel's Helm",
+      "nameJa": "堕天使の兜",
+      "type": "MONSTER",
+      "atk": 25,
+      "atkSpeed": 110,
+      "hp": 40,
+      "moveSpeed": 450,
+      "gold": 15,
+      "exp": 15,
+      "skillKey": 300131,
+      "element": null,
+      "stageCount": 12
+    },
+    {
+      "key": 30021,
+      "nameEn": "Yeti",
+      "nameJa": "イエティ",
+      "type": "MONSTER",
+      "atk": 12,
+      "atkSpeed": 70,
+      "hp": 320,
+      "moveSpeed": 105,
+      "gold": 20,
+      "exp": 20,
+      "skillKey": 300211,
+      "element": null,
+      "stageCount": 12
+    },
+    {
+      "key": 30031,
+      "nameEn": "Dragon Hatchling",
+      "nameJa": "ドラゴンハッチリング",
+      "type": "MONSTER",
+      "atk": 30,
+      "atkSpeed": 70,
+      "hp": 175,
+      "moveSpeed": 195,
+      "gold": 10,
+      "exp": 5,
+      "skillKey": 300311,
+      "element": null,
+      "stageCount": 7
+    },
+    {
+      "key": 30041,
+      "nameEn": "Snow Mountain Warrior",
+      "nameJa": "雪山戦士",
+      "type": "MONSTER",
+      "atk": 15,
+      "atkSpeed": 70,
+      "hp": 90,
+      "moveSpeed": 330,
+      "gold": 10,
+      "exp": 5,
+      "skillKey": 300411,
+      "element": null,
+      "stageCount": 12
+    },
+    {
+      "key": 30042,
+      "nameEn": "Snow Mountain Archer",
+      "nameJa": "雪山の弓兵",
+      "type": "MONSTER",
+      "atk": 20,
+      "atkSpeed": 130,
+      "hp": 70,
+      "moveSpeed": 260,
+      "gold": 10,
+      "exp": 5,
+      "skillKey": 300421,
+      "element": null,
+      "stageCount": 8
+    },
+    {
+      "key": 30043,
+      "nameEn": "Snow Mountain Guard",
+      "nameJa": "雪山衛兵",
+      "type": "MONSTER",
+      "atk": 15,
+      "atkSpeed": 90,
+      "hp": 155,
+      "moveSpeed": 240,
+      "gold": 10,
+      "exp": 5,
+      "skillKey": 300431,
+      "element": null,
+      "stageCount": 8
+    },
+    {
+      "key": 30044,
+      "nameEn": "Snow Mountain Mage",
+      "nameJa": "雪山の魔法使い",
+      "type": "MONSTER",
+      "atk": 25,
+      "atkSpeed": 100,
+      "hp": 55,
+      "moveSpeed": 220,
+      "gold": 10,
+      "exp": 5,
+      "skillKey": 300441,
+      "element": null,
+      "stageCount": 9
+    },
+    {
+      "key": 30051,
+      "nameEn": "Ghost",
+      "nameJa": "幽霊",
+      "type": "MONSTER",
+      "atk": 10,
+      "atkSpeed": 180,
+      "hp": 65,
+      "moveSpeed": 570,
+      "gold": 15,
+      "exp": 15,
+      "skillKey": 300511,
+      "element": null,
+      "stageCount": 16
+    },
+    {
+      "key": 30061,
+      "nameEn": "Lava Being",
+      "nameJa": "溶岩の化身",
+      "type": "MONSTER",
+      "atk": 20,
+      "atkSpeed": 75,
+      "hp": 75,
+      "moveSpeed": 330,
+      "gold": 20,
+      "exp": 20,
+      "skillKey": 300611,
+      "element": null,
+      "stageCount": 4
+    },
+    {
+      "key": 30071,
+      "nameEn": "Blood Priest",
+      "nameJa": "血の聖職者",
+      "type": "MONSTER",
+      "atk": 16,
+      "atkSpeed": 65,
+      "hp": 125,
+      "moveSpeed": 180,
+      "gold": 35,
+      "exp": 35,
+      "skillKey": 300711,
+      "element": null,
+      "stageCount": 2
+    },
+    {
+      "key": 30081,
+      "nameEn": "Demon Soldier",
+      "nameJa": "デーモン兵",
+      "type": "MONSTER",
+      "atk": 20,
+      "atkSpeed": 80,
+      "hp": 70,
+      "moveSpeed": 260,
+      "gold": 10,
+      "exp": 11,
+      "skillKey": 300811,
+      "element": null,
+      "stageCount": 9
+    },
+    {
+      "key": 30082,
+      "nameEn": "Demon Legion Commander",
+      "nameJa": "デーモン軍団長",
+      "type": "MONSTER",
+      "atk": 20,
+      "atkSpeed": 80,
+      "hp": 45,
+      "moveSpeed": 190,
+      "gold": 10,
+      "exp": 13,
+      "skillKey": 300821,
+      "element": null,
+      "stageCount": 8
+    },
+    {
+      "key": 30083,
+      "nameEn": "Demon Shocktrooper",
+      "nameJa": "デーモン突撃兵",
+      "type": "MONSTER",
+      "atk": 20,
+      "atkSpeed": 80,
+      "hp": 90,
+      "moveSpeed": 280,
+      "gold": 30,
+      "exp": 30,
+      "skillKey": 300831,
+      "element": null,
+      "stageCount": 9
+    },
+    {
+      "key": 30084,
+      "nameEn": "Burning Piglet",
+      "nameJa": "燃える子豚",
+      "type": "MONSTER",
+      "atk": 30,
+      "atkSpeed": 80,
+      "hp": 110,
+      "moveSpeed": 470,
+      "gold": 30,
+      "exp": 30,
+      "skillKey": 300841,
+      "element": null,
+      "stageCount": 9
+    },
+    {
+      "key": 30091,
+      "nameEn": "Hell Golem",
+      "nameJa": "地獄のゴーレム",
+      "type": "MONSTER",
+      "atk": 40,
+      "atkSpeed": 60,
+      "hp": 185,
+      "moveSpeed": 160,
+      "gold": 30,
+      "exp": 30,
+      "skillKey": 300911,
+      "element": null,
+      "stageCount": 4
+    },
+    {
+      "key": 30101,
+      "nameEn": "Burning Hell Priest",
+      "nameJa": "燃える地獄の神官",
+      "type": "MONSTER",
+      "atk": 30,
+      "atkSpeed": 100,
+      "hp": 95,
+      "moveSpeed": 230,
+      "gold": 30,
+      "exp": 30,
+      "skillKey": 301015,
+      "element": "fire",
+      "stageCount": 8
+    },
+    {
+      "key": 30102,
+      "nameEn": "Frozen Hell Priest",
+      "nameJa": "凍る地獄の神官",
+      "type": "MONSTER",
+      "atk": 30,
+      "atkSpeed": 100,
+      "hp": 95,
+      "moveSpeed": 230,
+      "gold": 30,
+      "exp": 30,
+      "skillKey": 301025,
+      "element": "cold",
+      "stageCount": 7
+    },
+    {
+      "key": 30103,
+      "nameEn": "Electric Hell Priest",
+      "nameJa": "雷電の地獄の神官",
+      "type": "MONSTER",
+      "atk": 30,
+      "atkSpeed": 100,
+      "hp": 95,
+      "moveSpeed": 230,
+      "gold": 30,
+      "exp": 30,
+      "skillKey": 301035,
+      "element": "lightning",
+      "stageCount": 6
+    },
+    {
+      "key": 30104,
+      "nameEn": "Chaos Hell Priest",
+      "nameJa": "カオスの地獄の神官",
+      "type": "MONSTER",
+      "atk": 30,
+      "atkSpeed": 100,
+      "hp": 75,
+      "moveSpeed": 230,
+      "gold": 30,
+      "exp": 30,
+      "skillKey": 301045,
+      "element": "chaos",
+      "stageCount": 4
+    },
+    {
+      "key": 30111,
+      "nameEn": "Finger of Death",
+      "nameJa": "死の指",
+      "type": "MONSTER",
+      "atk": 25,
+      "atkSpeed": 160,
+      "hp": 65,
+      "moveSpeed": 430,
+      "gold": 30,
+      "exp": 30,
+      "skillKey": 301111,
+      "element": null,
+      "stageCount": 8
+    },
+    {
+      "key": 30901,
+      "nameEn": "Archon Morkar",
+      "nameJa": "モルカル執政官",
+      "type": "MONSTER",
+      "atk": 70,
+      "atkSpeed": 130,
+      "hp": 2550,
+      "moveSpeed": 120,
+      "gold": 500,
+      "exp": 1,
+      "skillKey": "309011 309021",
+      "element": null,
+      "stageCount": 1
+    },
+    {
+      "key": 30902,
+      "nameEn": "Archon Morkar",
+      "nameJa": "モルカル執政官",
+      "type": "MONSTER",
+      "atk": 80,
+      "atkSpeed": 150,
+      "hp": 2750,
+      "moveSpeed": 120,
+      "gold": 500,
+      "exp": 1,
+      "skillKey": "309011 309021 309031",
+      "element": null,
+      "stageCount": 1
+    },
+    {
+      "key": 30903,
+      "nameEn": "Archon Morkar",
+      "nameJa": "モルカル執政官",
+      "type": "MONSTER",
+      "atk": 90,
+      "atkSpeed": 150,
+      "hp": 3050,
+      "moveSpeed": 120,
+      "gold": 500,
+      "exp": 1,
+      "skillKey": "309011 309021 309031 309041",
+      "element": null,
+      "stageCount": 1
+    },
+    {
+      "key": 30904,
+      "nameEn": "Archon Morkar",
+      "nameJa": "モルカル執政官",
+      "type": "MONSTER",
+      "atk": 100,
+      "atkSpeed": 150,
+      "hp": 3550,
+      "moveSpeed": 120,
+      "gold": 500,
+      "exp": 1,
+      "skillKey": "309011 309021 309031 309041 309051",
+      "element": null,
+      "stageCount": 1
+    }
+  ],
+  "stages": [
+    {
+      "key": 1101,
+      "act": 1,
+      "no": 1,
+      "level": 1,
+      "difficulty": "NORMAL",
+      "type": "NORMAL",
+      "boss": 10022,
+      "enemies": [
+        10011,
+        10021
+      ]
+    },
+    {
+      "key": 1102,
+      "act": 1,
+      "no": 2,
+      "level": 2,
+      "difficulty": "NORMAL",
+      "type": "NORMAL",
+      "boss": 10023,
+      "enemies": [
+        10011,
+        10021,
+        10022
+      ]
+    },
+    {
+      "key": 1103,
+      "act": 1,
+      "no": 3,
+      "level": 3,
+      "difficulty": "NORMAL",
+      "type": "NORMAL",
+      "boss": 10041,
+      "enemies": [
+        10021,
+        10022,
+        10023,
+        10031
+      ]
+    },
+    {
+      "key": 1104,
+      "act": 1,
+      "no": 4,
+      "level": 5,
+      "difficulty": "NORMAL",
+      "type": "NORMAL",
+      "boss": 10042,
+      "enemies": [
+        10011,
+        10021,
+        10023,
+        10041
+      ]
+    },
+    {
+      "key": 1105,
+      "act": 1,
+      "no": 5,
+      "level": 6,
+      "difficulty": "NORMAL",
+      "type": "NORMAL",
+      "boss": 10043,
+      "enemies": [
+        10021,
+        10022,
+        10023,
+        10041,
+        10042
+      ]
+    },
+    {
+      "key": 1106,
+      "act": 1,
+      "no": 6,
+      "level": 7,
+      "difficulty": "NORMAL",
+      "type": "NORMAL",
+      "boss": 10051,
+      "enemies": [
+        10011,
+        10041,
+        10042,
+        10043
+      ]
+    },
+    {
+      "key": 1107,
+      "act": 1,
+      "no": 7,
+      "level": 8,
+      "difficulty": "NORMAL",
+      "type": "NORMAL",
+      "boss": 10053,
+      "enemies": [
+        10031,
+        10051,
+        10052
+      ]
+    },
+    {
+      "key": 1108,
+      "act": 1,
+      "no": 8,
+      "level": 10,
+      "difficulty": "NORMAL",
+      "type": "NORMAL",
+      "boss": 10052,
+      "enemies": [
+        10031,
+        10051,
+        10052,
+        10053
+      ]
+    },
+    {
+      "key": 1109,
+      "act": 1,
+      "no": 9,
+      "level": 11,
+      "difficulty": "NORMAL",
+      "type": "NORMAL",
+      "boss": 10043,
+      "enemies": [
+        10031,
+        10042,
+        10043,
+        10051,
+        10052,
+        10053
+      ]
+    },
+    {
+      "key": 1110,
+      "act": 1,
+      "no": 10,
+      "level": 12,
+      "difficulty": "NORMAL",
+      "type": "ACTBOSS",
+      "boss": 10901,
+      "enemies": []
+    },
+    {
+      "key": 1201,
+      "act": 2,
+      "no": 1,
+      "level": 13,
+      "difficulty": "NORMAL",
+      "type": "NORMAL",
+      "boss": 20024,
+      "enemies": [
+        20011,
+        20021,
+        20022
+      ]
+    },
+    {
+      "key": 1202,
+      "act": 2,
+      "no": 2,
+      "level": 14,
+      "difficulty": "NORMAL",
+      "type": "NORMAL",
+      "boss": 20021,
+      "enemies": [
+        20011,
+        20021,
+        20022,
+        20024
+      ]
+    },
+    {
+      "key": 1203,
+      "act": 2,
+      "no": 3,
+      "level": 15,
+      "difficulty": "NORMAL",
+      "type": "NORMAL",
+      "boss": 20031,
+      "enemies": [
+        10031,
+        20011,
+        20023,
+        20031,
+        20041
+      ]
+    },
+    {
+      "key": 1204,
+      "act": 2,
+      "no": 4,
+      "level": 16,
+      "difficulty": "NORMAL",
+      "type": "NORMAL",
+      "boss": 20041,
+      "enemies": [
+        20011,
+        20023,
+        20031,
+        20041,
+        20051
+      ]
+    },
+    {
+      "key": 1205,
+      "act": 2,
+      "no": 5,
+      "level": 17,
+      "difficulty": "NORMAL",
+      "type": "NORMAL",
+      "boss": 20071,
+      "enemies": [
+        20011,
+        20021,
+        20022,
+        20051
+      ]
+    },
+    {
+      "key": 1206,
+      "act": 2,
+      "no": 6,
+      "level": 18,
+      "difficulty": "NORMAL",
+      "type": "NORMAL",
+      "boss": 20081,
+      "enemies": [
+        20024,
+        20031,
+        20061,
+        20071
+      ]
+    },
+    {
+      "key": 1207,
+      "act": 2,
+      "no": 7,
+      "level": 19,
+      "difficulty": "NORMAL",
+      "type": "NORMAL",
+      "boss": 20023,
+      "enemies": [
+        10052,
+        20011,
+        20023,
+        20071,
+        20081
+      ]
+    },
+    {
+      "key": 1208,
+      "act": 2,
+      "no": 8,
+      "level": 20,
+      "difficulty": "NORMAL",
+      "type": "NORMAL",
+      "boss": 20061,
+      "enemies": [
+        20061,
+        20062,
+        20071,
+        20091
+      ]
+    },
+    {
+      "key": 1209,
+      "act": 2,
+      "no": 9,
+      "level": 21,
+      "difficulty": "NORMAL",
+      "type": "NORMAL",
+      "boss": 20111,
+      "enemies": [
+        20061,
+        20062,
+        20081,
+        20091,
+        20111
+      ]
+    },
+    {
+      "key": 1210,
+      "act": 2,
+      "no": 10,
+      "level": 22,
+      "difficulty": "NORMAL",
+      "type": "ACTBOSS",
+      "boss": 20901,
+      "enemies": []
+    },
+    {
+      "key": 1301,
+      "act": 3,
+      "no": 1,
+      "level": 23,
+      "difficulty": "NORMAL",
+      "type": "NORMAL",
+      "boss": 20024,
+      "enemies": [
+        30011,
+        30012,
+        30013
+      ]
+    },
+    {
+      "key": 1302,
+      "act": 3,
+      "no": 2,
+      "level": 24,
+      "difficulty": "NORMAL",
+      "type": "NORMAL",
+      "boss": 20021,
+      "enemies": [
+        30011,
+        30012,
+        30013,
+        30021,
+        30041
+      ]
+    },
+    {
+      "key": 1303,
+      "act": 3,
+      "no": 3,
+      "level": 25,
+      "difficulty": "NORMAL",
+      "type": "NORMAL",
+      "boss": 20031,
+      "enemies": [
+        30013,
+        30021,
+        30041,
+        30042
+      ]
+    },
+    {
+      "key": 1304,
+      "act": 3,
+      "no": 4,
+      "level": 26,
+      "difficulty": "NORMAL",
+      "type": "NORMAL",
+      "boss": 20041,
+      "enemies": [
+        30021,
+        30041,
+        30042,
+        30043,
+        30051
+      ]
+    },
+    {
+      "key": 1305,
+      "act": 3,
+      "no": 5,
+      "level": 27,
+      "difficulty": "NORMAL",
+      "type": "NORMAL",
+      "boss": 20071,
+      "enemies": [
+        30011,
+        30012,
+        30031,
+        30043,
+        30051
+      ]
+    },
+    {
+      "key": 1306,
+      "act": 3,
+      "no": 6,
+      "level": 28,
+      "difficulty": "NORMAL",
+      "type": "NORMAL",
+      "boss": 20081,
+      "enemies": [
+        30061,
+        30081,
+        30082,
+        30084,
+        30091
+      ]
+    },
+    {
+      "key": 1307,
+      "act": 3,
+      "no": 7,
+      "level": 29,
+      "difficulty": "NORMAL",
+      "type": "NORMAL",
+      "boss": 20023,
+      "enemies": [
+        30031,
+        30081,
+        30082,
+        30083,
+        30084
+      ]
+    },
+    {
+      "key": 1308,
+      "act": 3,
+      "no": 8,
+      "level": 30,
+      "difficulty": "NORMAL",
+      "type": "NORMAL",
+      "boss": 20061,
+      "enemies": [
+        30051,
+        30083,
+        30101,
+        30111
+      ]
+    },
+    {
+      "key": 1309,
+      "act": 3,
+      "no": 9,
+      "level": 31,
+      "difficulty": "NORMAL",
+      "type": "NORMAL",
+      "boss": 20111,
+      "enemies": [
+        30051,
+        30081,
+        30083,
+        30101,
+        30111
+      ]
+    },
+    {
+      "key": 1310,
+      "act": 3,
+      "no": 10,
+      "level": 32,
+      "difficulty": "NORMAL",
+      "type": "ACTBOSS",
+      "boss": 30901,
+      "enemies": []
+    },
+    {
+      "key": 2101,
+      "act": 1,
+      "no": 1,
+      "level": 33,
+      "difficulty": "NIGHTMARE",
+      "type": "NORMAL",
+      "boss": 20024,
+      "enemies": [
+        10011,
+        10021,
+        10022
+      ]
+    },
+    {
+      "key": 2102,
+      "act": 1,
+      "no": 2,
+      "level": 34,
+      "difficulty": "NIGHTMARE",
+      "type": "NORMAL",
+      "boss": 20021,
+      "enemies": [
+        10011,
+        10021,
+        10022,
+        10023
+      ]
+    },
+    {
+      "key": 2103,
+      "act": 1,
+      "no": 3,
+      "level": 35,
+      "difficulty": "NIGHTMARE",
+      "type": "NORMAL",
+      "boss": 20031,
+      "enemies": [
+        10021,
+        10022,
+        10023,
+        10031
+      ]
+    },
+    {
+      "key": 2104,
+      "act": 1,
+      "no": 4,
+      "level": 35,
+      "difficulty": "NIGHTMARE",
+      "type": "NORMAL",
+      "boss": 20041,
+      "enemies": [
+        10011,
+        10021,
+        10023,
+        10041
+      ]
+    },
+    {
+      "key": 2105,
+      "act": 1,
+      "no": 5,
+      "level": 36,
+      "difficulty": "NIGHTMARE",
+      "type": "NORMAL",
+      "boss": 20071,
+      "enemies": [
+        10021,
+        10022,
+        10023,
+        10041,
+        10042
+      ]
+    },
+    {
+      "key": 2106,
+      "act": 1,
+      "no": 6,
+      "level": 37,
+      "difficulty": "NIGHTMARE",
+      "type": "NORMAL",
+      "boss": 20081,
+      "enemies": [
+        10011,
+        10041,
+        10042,
+        10043
+      ]
+    },
+    {
+      "key": 2107,
+      "act": 1,
+      "no": 7,
+      "level": 38,
+      "difficulty": "NIGHTMARE",
+      "type": "NORMAL",
+      "boss": 20023,
+      "enemies": [
+        10031,
+        10051,
+        10052
+      ]
+    },
+    {
+      "key": 2108,
+      "act": 1,
+      "no": 8,
+      "level": 39,
+      "difficulty": "NIGHTMARE",
+      "type": "NORMAL",
+      "boss": 20061,
+      "enemies": [
+        10031,
+        10051,
+        10052,
+        10053
+      ]
+    },
+    {
+      "key": 2109,
+      "act": 1,
+      "no": 9,
+      "level": 40,
+      "difficulty": "NIGHTMARE",
+      "type": "NORMAL",
+      "boss": 20111,
+      "enemies": [
+        10031,
+        10042,
+        10043,
+        10051,
+        10052,
+        10053
+      ]
+    },
+    {
+      "key": 2110,
+      "act": 1,
+      "no": 10,
+      "level": 40,
+      "difficulty": "NIGHTMARE",
+      "type": "ACTBOSS",
+      "boss": 10902,
+      "enemies": []
+    },
+    {
+      "key": 2201,
+      "act": 2,
+      "no": 1,
+      "level": 41,
+      "difficulty": "NIGHTMARE",
+      "type": "NORMAL",
+      "boss": 20024,
+      "enemies": [
+        20011,
+        20021,
+        20022
+      ]
+    },
+    {
+      "key": 2202,
+      "act": 2,
+      "no": 2,
+      "level": 41,
+      "difficulty": "NIGHTMARE",
+      "type": "NORMAL",
+      "boss": 20021,
+      "enemies": [
+        20011,
+        20021,
+        20022,
+        20024
+      ]
+    },
+    {
+      "key": 2203,
+      "act": 2,
+      "no": 3,
+      "level": 42,
+      "difficulty": "NIGHTMARE",
+      "type": "NORMAL",
+      "boss": 20031,
+      "enemies": [
+        10031,
+        20011,
+        20023,
+        20031,
+        20041
+      ]
+    },
+    {
+      "key": 2204,
+      "act": 2,
+      "no": 4,
+      "level": 42,
+      "difficulty": "NIGHTMARE",
+      "type": "NORMAL",
+      "boss": 20041,
+      "enemies": [
+        20011,
+        20023,
+        20031,
+        20041,
+        20051
+      ]
+    },
+    {
+      "key": 2205,
+      "act": 2,
+      "no": 5,
+      "level": 43,
+      "difficulty": "NIGHTMARE",
+      "type": "NORMAL",
+      "boss": 20071,
+      "enemies": [
+        20011,
+        20021,
+        20022,
+        20051
+      ]
+    },
+    {
+      "key": 2206,
+      "act": 2,
+      "no": 6,
+      "level": 43,
+      "difficulty": "NIGHTMARE",
+      "type": "NORMAL",
+      "boss": 20081,
+      "enemies": [
+        20024,
+        20031,
+        20061,
+        20071
+      ]
+    },
+    {
+      "key": 2207,
+      "act": 2,
+      "no": 7,
+      "level": 44,
+      "difficulty": "NIGHTMARE",
+      "type": "NORMAL",
+      "boss": 20023,
+      "enemies": [
+        10052,
+        20011,
+        20023,
+        20071,
+        20081
+      ]
+    },
+    {
+      "key": 2208,
+      "act": 2,
+      "no": 8,
+      "level": 44,
+      "difficulty": "NIGHTMARE",
+      "type": "NORMAL",
+      "boss": 20061,
+      "enemies": [
+        20061,
+        20062,
+        20071,
+        20091
+      ]
+    },
+    {
+      "key": 2209,
+      "act": 2,
+      "no": 9,
+      "level": 45,
+      "difficulty": "NIGHTMARE",
+      "type": "NORMAL",
+      "boss": 20111,
+      "enemies": [
+        20061,
+        20062,
+        20081,
+        20091,
+        20111
+      ]
+    },
+    {
+      "key": 2210,
+      "act": 2,
+      "no": 10,
+      "level": 45,
+      "difficulty": "NIGHTMARE",
+      "type": "ACTBOSS",
+      "boss": 20902,
+      "enemies": []
+    },
+    {
+      "key": 2301,
+      "act": 3,
+      "no": 1,
+      "level": 46,
+      "difficulty": "NIGHTMARE",
+      "type": "NORMAL",
+      "boss": 20024,
+      "enemies": [
+        30011,
+        30012,
+        30013
+      ]
+    },
+    {
+      "key": 2302,
+      "act": 3,
+      "no": 2,
+      "level": 47,
+      "difficulty": "NIGHTMARE",
+      "type": "NORMAL",
+      "boss": 20021,
+      "enemies": [
+        30011,
+        30012,
+        30013,
+        30021,
+        30041
+      ]
+    },
+    {
+      "key": 2303,
+      "act": 3,
+      "no": 3,
+      "level": 48,
+      "difficulty": "NIGHTMARE",
+      "type": "NORMAL",
+      "boss": 20031,
+      "enemies": [
+        30013,
+        30021,
+        30041,
+        30042,
+        30044
+      ]
+    },
+    {
+      "key": 2304,
+      "act": 3,
+      "no": 4,
+      "level": 49,
+      "difficulty": "NIGHTMARE",
+      "type": "NORMAL",
+      "boss": 20041,
+      "enemies": [
+        30021,
+        30041,
+        30042,
+        30043,
+        30044,
+        30051
+      ]
+    },
+    {
+      "key": 2305,
+      "act": 3,
+      "no": 5,
+      "level": 50,
+      "difficulty": "NIGHTMARE",
+      "type": "NORMAL",
+      "boss": 20071,
+      "enemies": [
+        30011,
+        30012,
+        30031,
+        30043,
+        30044,
+        30051
+      ]
+    },
+    {
+      "key": 2306,
+      "act": 3,
+      "no": 6,
+      "level": 50,
+      "difficulty": "NIGHTMARE",
+      "type": "NORMAL",
+      "boss": 20081,
+      "enemies": [
+        30061,
+        30081,
+        30082,
+        30084,
+        30091
+      ]
+    },
+    {
+      "key": 2307,
+      "act": 3,
+      "no": 7,
+      "level": 51,
+      "difficulty": "NIGHTMARE",
+      "type": "NORMAL",
+      "boss": 20023,
+      "enemies": [
+        30031,
+        30081,
+        30082,
+        30083,
+        30084
+      ]
+    },
+    {
+      "key": 2308,
+      "act": 3,
+      "no": 8,
+      "level": 51,
+      "difficulty": "NIGHTMARE",
+      "type": "NORMAL",
+      "boss": 20061,
+      "enemies": [
+        30051,
+        30083,
+        30101,
+        30102,
+        30111
+      ]
+    },
+    {
+      "key": 2309,
+      "act": 3,
+      "no": 9,
+      "level": 52,
+      "difficulty": "NIGHTMARE",
+      "type": "NORMAL",
+      "boss": 20111,
+      "enemies": [
+        30051,
+        30084,
+        30101,
+        30102,
+        30103,
+        30111
+      ]
+    },
+    {
+      "key": 2310,
+      "act": 3,
+      "no": 10,
+      "level": 52,
+      "difficulty": "NIGHTMARE",
+      "type": "ACTBOSS",
+      "boss": 30902,
+      "enemies": []
+    },
+    {
+      "key": 3101,
+      "act": 1,
+      "no": 1,
+      "level": 53,
+      "difficulty": "HELL",
+      "type": "NORMAL",
+      "boss": 20024,
+      "enemies": [
+        10011,
+        10021,
+        10022
+      ]
+    },
+    {
+      "key": 3102,
+      "act": 1,
+      "no": 2,
+      "level": 54,
+      "difficulty": "HELL",
+      "type": "NORMAL",
+      "boss": 20021,
+      "enemies": [
+        10011,
+        10021,
+        10022,
+        10023
+      ]
+    },
+    {
+      "key": 3103,
+      "act": 1,
+      "no": 3,
+      "level": 55,
+      "difficulty": "HELL",
+      "type": "NORMAL",
+      "boss": 20031,
+      "enemies": [
+        10021,
+        10022,
+        10023,
+        10031
+      ]
+    },
+    {
+      "key": 3104,
+      "act": 1,
+      "no": 4,
+      "level": 56,
+      "difficulty": "HELL",
+      "type": "NORMAL",
+      "boss": 20041,
+      "enemies": [
+        10011,
+        10021,
+        10023,
+        10041
+      ]
+    },
+    {
+      "key": 3105,
+      "act": 1,
+      "no": 5,
+      "level": 57,
+      "difficulty": "HELL",
+      "type": "NORMAL",
+      "boss": 20071,
+      "enemies": [
+        10021,
+        10022,
+        10023,
+        10041,
+        10042
+      ]
+    },
+    {
+      "key": 3106,
+      "act": 1,
+      "no": 6,
+      "level": 58,
+      "difficulty": "HELL",
+      "type": "NORMAL",
+      "boss": 20081,
+      "enemies": [
+        10011,
+        10041,
+        10042,
+        10043
+      ]
+    },
+    {
+      "key": 3107,
+      "act": 1,
+      "no": 7,
+      "level": 59,
+      "difficulty": "HELL",
+      "type": "NORMAL",
+      "boss": 20023,
+      "enemies": [
+        10031,
+        10051,
+        10052
+      ]
+    },
+    {
+      "key": 3108,
+      "act": 1,
+      "no": 8,
+      "level": 59,
+      "difficulty": "HELL",
+      "type": "NORMAL",
+      "boss": 20061,
+      "enemies": [
+        10031,
+        10051,
+        10052,
+        10053
+      ]
+    },
+    {
+      "key": 3109,
+      "act": 1,
+      "no": 9,
+      "level": 60,
+      "difficulty": "HELL",
+      "type": "NORMAL",
+      "boss": 20111,
+      "enemies": [
+        10031,
+        10042,
+        10043,
+        10051,
+        10052,
+        10053
+      ]
+    },
+    {
+      "key": 3110,
+      "act": 1,
+      "no": 10,
+      "level": 60,
+      "difficulty": "HELL",
+      "type": "ACTBOSS",
+      "boss": 10903,
+      "enemies": []
+    },
+    {
+      "key": 3201,
+      "act": 2,
+      "no": 1,
+      "level": 61,
+      "difficulty": "HELL",
+      "type": "NORMAL",
+      "boss": 20024,
+      "enemies": [
+        20011,
+        20021,
+        20022
+      ]
+    },
+    {
+      "key": 3202,
+      "act": 2,
+      "no": 2,
+      "level": 62,
+      "difficulty": "HELL",
+      "type": "NORMAL",
+      "boss": 20021,
+      "enemies": [
+        20011,
+        20021,
+        20022,
+        20024
+      ]
+    },
+    {
+      "key": 3203,
+      "act": 2,
+      "no": 3,
+      "level": 63,
+      "difficulty": "HELL",
+      "type": "NORMAL",
+      "boss": 20031,
+      "enemies": [
+        10031,
+        20011,
+        20023,
+        20031,
+        20041
+      ]
+    },
+    {
+      "key": 3204,
+      "act": 2,
+      "no": 4,
+      "level": 64,
+      "difficulty": "HELL",
+      "type": "NORMAL",
+      "boss": 20041,
+      "enemies": [
+        20011,
+        20023,
+        20031,
+        20041,
+        20042,
+        20051
+      ]
+    },
+    {
+      "key": 3205,
+      "act": 2,
+      "no": 5,
+      "level": 65,
+      "difficulty": "HELL",
+      "type": "NORMAL",
+      "boss": 20071,
+      "enemies": [
+        20011,
+        20021,
+        20022,
+        20041,
+        20051
+      ]
+    },
+    {
+      "key": 3206,
+      "act": 2,
+      "no": 6,
+      "level": 66,
+      "difficulty": "HELL",
+      "type": "NORMAL",
+      "boss": 20081,
+      "enemies": [
+        20024,
+        20031,
+        20041,
+        20061,
+        20071
+      ]
+    },
+    {
+      "key": 3207,
+      "act": 2,
+      "no": 7,
+      "level": 67,
+      "difficulty": "HELL",
+      "type": "NORMAL",
+      "boss": 20023,
+      "enemies": [
+        10052,
+        20011,
+        20023,
+        20042,
+        20071,
+        20081
+      ]
+    },
+    {
+      "key": 3208,
+      "act": 2,
+      "no": 8,
+      "level": 68,
+      "difficulty": "HELL",
+      "type": "NORMAL",
+      "boss": 20061,
+      "enemies": [
+        20042,
+        20061,
+        20062,
+        20071,
+        20091
+      ]
+    },
+    {
+      "key": 3209,
+      "act": 2,
+      "no": 9,
+      "level": 69,
+      "difficulty": "HELL",
+      "type": "NORMAL",
+      "boss": 20111,
+      "enemies": [
+        20061,
+        20062,
+        20081,
+        20091,
+        20111
+      ]
+    },
+    {
+      "key": 3210,
+      "act": 2,
+      "no": 10,
+      "level": 69,
+      "difficulty": "HELL",
+      "type": "ACTBOSS",
+      "boss": 20903,
+      "enemies": []
+    },
+    {
+      "key": 3301,
+      "act": 3,
+      "no": 1,
+      "level": 70,
+      "difficulty": "HELL",
+      "type": "NORMAL",
+      "boss": 20024,
+      "enemies": [
+        30011,
+        30012,
+        30013
+      ]
+    },
+    {
+      "key": 3302,
+      "act": 3,
+      "no": 2,
+      "level": 71,
+      "difficulty": "HELL",
+      "type": "NORMAL",
+      "boss": 20021,
+      "enemies": [
+        30011,
+        30012,
+        30013,
+        30021,
+        30041
+      ]
+    },
+    {
+      "key": 3303,
+      "act": 3,
+      "no": 3,
+      "level": 72,
+      "difficulty": "HELL",
+      "type": "NORMAL",
+      "boss": 20031,
+      "enemies": [
+        30013,
+        30021,
+        30041,
+        30042,
+        30044
+      ]
+    },
+    {
+      "key": 3304,
+      "act": 3,
+      "no": 4,
+      "level": 73,
+      "difficulty": "HELL",
+      "type": "NORMAL",
+      "boss": 20041,
+      "enemies": [
+        30021,
+        30041,
+        30042,
+        30043,
+        30044,
+        30051
+      ]
+    },
+    {
+      "key": 3305,
+      "act": 3,
+      "no": 5,
+      "level": 74,
+      "difficulty": "HELL",
+      "type": "NORMAL",
+      "boss": 20071,
+      "enemies": [
+        30011,
+        30012,
+        30031,
+        30043,
+        30044,
+        30051
+      ]
+    },
+    {
+      "key": 3306,
+      "act": 3,
+      "no": 6,
+      "level": 75,
+      "difficulty": "HELL",
+      "type": "NORMAL",
+      "boss": 20081,
+      "enemies": [
+        30061,
+        30081,
+        30082,
+        30084,
+        30091
+      ]
+    },
+    {
+      "key": 3307,
+      "act": 3,
+      "no": 7,
+      "level": 76,
+      "difficulty": "HELL",
+      "type": "NORMAL",
+      "boss": 20023,
+      "enemies": [
+        30031,
+        30071,
+        30081,
+        30082,
+        30083,
+        30084
+      ]
+    },
+    {
+      "key": 3308,
+      "act": 3,
+      "no": 8,
+      "level": 76,
+      "difficulty": "HELL",
+      "type": "NORMAL",
+      "boss": 20061,
+      "enemies": [
+        30051,
+        30083,
+        30101,
+        30102,
+        30103,
+        30111
+      ]
+    },
+    {
+      "key": 3309,
+      "act": 3,
+      "no": 9,
+      "level": 77,
+      "difficulty": "HELL",
+      "type": "NORMAL",
+      "boss": 20111,
+      "enemies": [
+        30051,
+        30101,
+        30102,
+        30103,
+        30104,
+        30111
+      ]
+    },
+    {
+      "key": 3310,
+      "act": 3,
+      "no": 10,
+      "level": 77,
+      "difficulty": "HELL",
+      "type": "ACTBOSS",
+      "boss": 30903,
+      "enemies": []
+    },
+    {
+      "key": 4101,
+      "act": 1,
+      "no": 1,
+      "level": 78,
+      "difficulty": "TORMENT",
+      "type": "NORMAL",
+      "boss": 20024,
+      "enemies": [
+        10011,
+        10021,
+        10022
+      ]
+    },
+    {
+      "key": 4102,
+      "act": 1,
+      "no": 2,
+      "level": 79,
+      "difficulty": "TORMENT",
+      "type": "NORMAL",
+      "boss": 20021,
+      "enemies": [
+        10011,
+        10021,
+        10022,
+        10023
+      ]
+    },
+    {
+      "key": 4103,
+      "act": 1,
+      "no": 3,
+      "level": 80,
+      "difficulty": "TORMENT",
+      "type": "NORMAL",
+      "boss": 20031,
+      "enemies": [
+        10021,
+        10022,
+        10023,
+        10031
+      ]
+    },
+    {
+      "key": 4104,
+      "act": 1,
+      "no": 4,
+      "level": 81,
+      "difficulty": "TORMENT",
+      "type": "NORMAL",
+      "boss": 20041,
+      "enemies": [
+        10011,
+        10021,
+        10023,
+        10041
+      ]
+    },
+    {
+      "key": 4105,
+      "act": 1,
+      "no": 5,
+      "level": 82,
+      "difficulty": "TORMENT",
+      "type": "NORMAL",
+      "boss": 20071,
+      "enemies": [
+        10021,
+        10022,
+        10023,
+        10041,
+        10042
+      ]
+    },
+    {
+      "key": 4106,
+      "act": 1,
+      "no": 6,
+      "level": 83,
+      "difficulty": "TORMENT",
+      "type": "NORMAL",
+      "boss": 20081,
+      "enemies": [
+        10011,
+        10041,
+        10042,
+        10043
+      ]
+    },
+    {
+      "key": 4107,
+      "act": 1,
+      "no": 7,
+      "level": 84,
+      "difficulty": "TORMENT",
+      "type": "NORMAL",
+      "boss": 20023,
+      "enemies": [
+        10031,
+        10051,
+        10052
+      ]
+    },
+    {
+      "key": 4108,
+      "act": 1,
+      "no": 8,
+      "level": 84,
+      "difficulty": "TORMENT",
+      "type": "NORMAL",
+      "boss": 20061,
+      "enemies": [
+        10031,
+        10051,
+        10052,
+        10053
+      ]
+    },
+    {
+      "key": 4109,
+      "act": 1,
+      "no": 9,
+      "level": 85,
+      "difficulty": "TORMENT",
+      "type": "NORMAL",
+      "boss": 20111,
+      "enemies": [
+        10031,
+        10042,
+        10043,
+        10051,
+        10052,
+        10053
+      ]
+    },
+    {
+      "key": 4110,
+      "act": 1,
+      "no": 10,
+      "level": 85,
+      "difficulty": "TORMENT",
+      "type": "ACTBOSS",
+      "boss": 10904,
+      "enemies": []
+    },
+    {
+      "key": 4201,
+      "act": 2,
+      "no": 1,
+      "level": 86,
+      "difficulty": "TORMENT",
+      "type": "NORMAL",
+      "boss": 20024,
+      "enemies": [
+        20011,
+        20021,
+        20022
+      ]
+    },
+    {
+      "key": 4202,
+      "act": 2,
+      "no": 2,
+      "level": 86,
+      "difficulty": "TORMENT",
+      "type": "NORMAL",
+      "boss": 20021,
+      "enemies": [
+        20011,
+        20021,
+        20022,
+        20024
+      ]
+    },
+    {
+      "key": 4203,
+      "act": 2,
+      "no": 3,
+      "level": 87,
+      "difficulty": "TORMENT",
+      "type": "NORMAL",
+      "boss": 20031,
+      "enemies": [
+        10031,
+        20011,
+        20023,
+        20031,
+        20041
+      ]
+    },
+    {
+      "key": 4204,
+      "act": 2,
+      "no": 4,
+      "level": 87,
+      "difficulty": "TORMENT",
+      "type": "NORMAL",
+      "boss": 20041,
+      "enemies": [
+        20011,
+        20023,
+        20031,
+        20041,
+        20042,
+        20051
+      ]
+    },
+    {
+      "key": 4205,
+      "act": 2,
+      "no": 5,
+      "level": 88,
+      "difficulty": "TORMENT",
+      "type": "NORMAL",
+      "boss": 20071,
+      "enemies": [
+        20011,
+        20021,
+        20022,
+        20051
+      ]
+    },
+    {
+      "key": 4206,
+      "act": 2,
+      "no": 6,
+      "level": 88,
+      "difficulty": "TORMENT",
+      "type": "NORMAL",
+      "boss": 20081,
+      "enemies": [
+        20024,
+        20031,
+        20061,
+        20071
+      ]
+    },
+    {
+      "key": 4207,
+      "act": 2,
+      "no": 7,
+      "level": 89,
+      "difficulty": "TORMENT",
+      "type": "NORMAL",
+      "boss": 20023,
+      "enemies": [
+        10052,
+        20011,
+        20023,
+        20042,
+        20071,
+        20081
+      ]
+    },
+    {
+      "key": 4208,
+      "act": 2,
+      "no": 8,
+      "level": 89,
+      "difficulty": "TORMENT",
+      "type": "NORMAL",
+      "boss": 20061,
+      "enemies": [
+        20061,
+        20062,
+        20071,
+        20091
+      ]
+    },
+    {
+      "key": 4209,
+      "act": 2,
+      "no": 9,
+      "level": 90,
+      "difficulty": "TORMENT",
+      "type": "NORMAL",
+      "boss": 20111,
+      "enemies": [
+        20061,
+        20062,
+        20081,
+        20091,
+        20111
+      ]
+    },
+    {
+      "key": 4210,
+      "act": 2,
+      "no": 10,
+      "level": 90,
+      "difficulty": "TORMENT",
+      "type": "ACTBOSS",
+      "boss": 20904,
+      "enemies": []
+    },
+    {
+      "key": 4301,
+      "act": 3,
+      "no": 1,
+      "level": 91,
+      "difficulty": "TORMENT",
+      "type": "NORMAL",
+      "boss": 20024,
+      "enemies": [
+        30011,
+        30012,
+        30013
+      ]
+    },
+    {
+      "key": 4302,
+      "act": 3,
+      "no": 2,
+      "level": 91,
+      "difficulty": "TORMENT",
+      "type": "NORMAL",
+      "boss": 20021,
+      "enemies": [
+        30011,
+        30012,
+        30013,
+        30021,
+        30041
+      ]
+    },
+    {
+      "key": 4303,
+      "act": 3,
+      "no": 3,
+      "level": 92,
+      "difficulty": "TORMENT",
+      "type": "NORMAL",
+      "boss": 20031,
+      "enemies": [
+        30013,
+        30021,
+        30041,
+        30042,
+        30044,
+        30102
+      ]
+    },
+    {
+      "key": 4304,
+      "act": 3,
+      "no": 4,
+      "level": 92,
+      "difficulty": "TORMENT",
+      "type": "NORMAL",
+      "boss": 20041,
+      "enemies": [
+        30021,
+        30041,
+        30042,
+        30043,
+        30044,
+        30051
+      ]
+    },
+    {
+      "key": 4305,
+      "act": 3,
+      "no": 5,
+      "level": 93,
+      "difficulty": "TORMENT",
+      "type": "NORMAL",
+      "boss": 20071,
+      "enemies": [
+        30011,
+        30031,
+        30043,
+        30044,
+        30051,
+        30103
+      ]
+    },
+    {
+      "key": 4306,
+      "act": 3,
+      "no": 6,
+      "level": 93,
+      "difficulty": "TORMENT",
+      "type": "NORMAL",
+      "boss": 20081,
+      "enemies": [
+        30061,
+        30081,
+        30082,
+        30084,
+        30091,
+        30103
+      ]
+    },
+    {
+      "key": 4307,
+      "act": 3,
+      "no": 7,
+      "level": 94,
+      "difficulty": "TORMENT",
+      "type": "NORMAL",
+      "boss": 20023,
+      "enemies": [
+        30071,
+        30081,
+        30082,
+        30083,
+        30084,
+        30104
+      ]
+    },
+    {
+      "key": 4308,
+      "act": 3,
+      "no": 8,
+      "level": 94,
+      "difficulty": "TORMENT",
+      "type": "NORMAL",
+      "boss": 20061,
+      "enemies": [
+        30051,
+        30083,
+        30101,
+        30102,
+        30104,
+        30111
+      ]
+    },
+    {
+      "key": 4309,
+      "act": 3,
+      "no": 9,
+      "level": 95,
+      "difficulty": "TORMENT",
+      "type": "NORMAL",
+      "boss": 20111,
+      "enemies": [
+        30051,
+        30101,
+        30102,
+        30103,
+        30104,
+        30111
+      ]
+    },
+    {
+      "key": 4310,
+      "act": 3,
+      "no": 10,
+      "level": 95,
+      "difficulty": "TORMENT",
+      "type": "ACTBOSS",
+      "boss": 30904,
+      "enemies": []
+    }
+  ]
 }
