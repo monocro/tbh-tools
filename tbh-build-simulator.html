@@ -82,6 +82,7 @@
   #aiPicks ul,#aiPicks ol{margin:6px 0 6px 20px;}
   #aiPicks li{margin:2px 0;}
   #aiPicks code{background:var(--surface2);padding:1px 5px;border-radius:4px;font-size:12px;}
+  #aiPicks a{color:var(--accent);text-decoration:underline;text-underline-offset:2px;}
   #aiPicks table.aitbl{border-collapse:collapse;margin:8px 0;width:100%;}
   #aiPicks .aitbl th,#aiPicks .aitbl td{border:1px solid var(--border);padding:4px 9px;text-align:left;font-size:12px;vertical-align:top;}
   #aiPicks .aitbl th{color:var(--muted);font-weight:600;background:var(--surface);}
@@ -489,7 +490,9 @@ function applyAIResult(obj){
 }
 // 軽量Markdown（表・見出し・太字・箇条書き）
 function aiEsc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
-function aiInline(s){return aiEsc(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/`([^`]+)`/g,'<code>$1</code>');}
+function aiInline(s){return aiEsc(s)
+  .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>')
+  .replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/`([^`]+)`/g,'<code>$1</code>');}
 function aiMd(src){
   const L=String(src||'').split('\n'); let h='',i=0;
   const cells=l=>l.trim().replace(/^\|/,'').replace(/\|$/,'').split('|').map(c=>c.trim());
