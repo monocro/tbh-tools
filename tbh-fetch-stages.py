@@ -66,41 +66,6 @@ def extract_array(h, key):
     raise RuntimeError("array not closed: " + key)
 
 
-def obj_after(h, marker):
-    """すでにアンエスケープ済みのテキストから marker(="..."{) 直後の {…} を1つ取り出す。
-
-    tbh.city の個別ステージページ（fetch_city でアンエスケープ済み）から
-    "boss":{…} / "rewards":{…} を波括弧の対応で安全に抜き出す用途。見つからなければ None。
-    """
-    i = h.find(marker)
-    if i < 0:
-        return None
-    start = i + len(marker) - 1  # '{' の位置
-    depth, j, instr, esc = 0, start, False, False
-    while j < len(h):
-        c = h[j]
-        if esc:
-            esc = False
-        elif c == "\\":
-            esc = True
-        elif instr:
-            if c == '"':
-                instr = False
-        elif c == '"':
-            instr = True
-        elif c == "{":
-            depth += 1
-        elif c == "}":
-            depth -= 1
-            if depth == 0:
-                try:
-                    return json.loads(h[start:j + 1])
-                except Exception:
-                    return None
-        j += 1
-    return None
-
-
 def name_pair(i18n):
     return i18n.get("en-US"), i18n.get("ja-JP")
 
@@ -189,29 +154,6 @@ def main():
     except Exception as e:
         print("tbh.city merge skip:", e)
 
-    # 各ステージの「レベルスケール後の実値」を tbh.city の個別ページからマージ。
-    # probonk の atk/hp は基準値のみで実機の実ダメージが出せないため、ここで補完する。
-    #   scaledBoss      … そのステージのボス(最強モンスター)のスケール後 {hp, damage}
-    #   avgMonsterHp/Dmg … 雑魚(wave)のスケール後 平均HP/平均ダメージ(ボス専用ステージは0)
-    # 個別ページは120リクエスト。失敗したステージは該当キー無し（推測で埋めない）。
-    scaled_ok = 0
-    for k, st in stage_map.items():
-        try:
-            ph = fetch_city("stages/%d" % k)
-        except Exception:
-            continue
-        boss = obj_after(ph, '"boss":{')
-        rew = obj_after(ph, '"rewards":{')
-        if isinstance(boss, dict) and boss.get("hp") is not None:
-            st["scaledBoss"] = {"hp": boss.get("hp"), "damage": boss.get("damage")}
-        if isinstance(rew, dict):
-            if rew.get("avg_monster_hp") is not None:
-                st["avgMonsterHp"] = rew.get("avg_monster_hp")
-            if rew.get("avg_monster_dmg") is not None:
-                st["avgMonsterDmg"] = rew.get("avg_monster_dmg")
-        scaled_ok += 1
-    print("stage scaled stats merged (tbh.city):", scaled_ok)
-
     stages = sorted(stage_map.values(), key=lambda s: s["key"])
     enemies.sort(key=lambda e: e["key"])
 
@@ -256,9 +198,6 @@ def main():
         "skillKeys=参照スキルID(ボスは複数フェーズ), detailed=完全な攻撃詳細の有無。"
         "source が attack 詳細を持つのはact1の16体のみで、残り45体は range/multiplier/activation が未公開のため null(推測しない)。"
         "stages の expectedExp/expectedGold はクリア期待値(tbh.city由来)。"
-        "stages の scaledBoss={hp,damage} はそのステージのボス(最強敵)のレベルスケール後の実値、"
-        "avgMonsterHp/avgMonsterDmg は雑魚(wave)のスケール後の平均HP/平均ダメージ(いずれもtbh.city個別ページ由来、ボス専用ステージの平均は0)。"
-        "enemies[].atk/hp が基準値なのに対し、これら scaled* がそのステージで実際に出る数値。"
         "difficulty: NORMAL/NIGHTMARE/HELL/TORMENT。type ACTBOSS=章ボスステージ。"
         "difficulties[] は各難易度の属性耐性デバフとレベル範囲: resistancePenalty=プレイヤーの全属性耐性が受けるFLAT減算 "
         "(NORMAL 0 / NIGHTMARE -20 / HELL -40 / TORMENT -60), resistanceDebuff=属性別の減算値, "
