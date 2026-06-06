@@ -232,10 +232,11 @@ function render(){
   rs.sort((a,b)=>{
     let va=getv(a), vb=getv(b);
     const na=(va==null||!isFinite(va)), nb=(vb==null||!isFinite(vb));
-    if(na&&nb) return 0;
-    if(na) return 1;
+    if(na&&nb) return b.cexp-a.cexp;   // 両方未算出 → 1回EXPの高い順
+    if(na) return 1;                   // 未算出は常に末尾
     if(nb) return -1;
-    return (va-vb)*dir;
+    if(va!==vb) return (va-vb)*dir;
+    return b.cexp-a.cexp;              // 同値 → 1回EXPの高い順
   });
 
   document.getElementById('count').textContent=rs.length+" ステージ"+(hero>0?`（Lv${hero}）`:"（レベル未入力）");
