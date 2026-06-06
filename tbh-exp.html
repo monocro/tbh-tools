@@ -249,7 +249,7 @@ function render(){
   if(hero<=0){
     banner.innerHTML='<div class="banner">まず <b>ヒーローレベル</b> を入力してください。</div>';
   }else if(!model){
-    banner.innerHTML='<div class="banner">いまは <b>1回EXP</b>（1クリアで入る量）の高い順です。<b>DPS</b> か <b>クリア秒</b> を入れると <b>毎時EXP</b> で並べ替えます。</div>';
+    banner.innerHTML='';
   }else if(model.kind==="dps"){
     banner.innerHTML='<div class="banner">DPS から推定したタイムで毎時EXPを算出。<span class="meas">緑＝実測</span>を入れるほど正確になります。</div>';
   }else{
