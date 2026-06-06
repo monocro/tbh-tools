@@ -33,10 +33,7 @@
   #typeChips .chip:first-child{border-top-left-radius:9px;border-bottom-left-radius:9px;border-left-width:1px;}
   #typeChips .chip:last-child{border-top-right-radius:9px;border-bottom-right-radius:9px;}
   #typeChips .chip.on{box-shadow:inset 0 -3px 0 rgba(0,0,0,.25);}
-  .hint{font-size:10px;color:var(--muted);font-weight:400;opacity:.8;}
   #equipSub{margin-left:14px;padding-left:12px;border-left:2px solid var(--border);}
-  #lblEquipSub{margin-left:14px;}
-  #lblEquipSub b{color:var(--t-equip);font-weight:600;}
   .dot{display:inline-block;width:9px;height:9px;border-radius:50%;vertical-align:middle;border:1px solid #0004;margin-right:6px;}
   .dot.none{background:repeating-linear-gradient(45deg,#555,#555 2px,#333 2px,#333 4px);}
   .toolrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0 6px;}
@@ -119,7 +116,6 @@
 <div class="row" id="quickStats"></div>
 <div class="lbl" id="lblType"></div>
 <div class="row" id="typeChips"></div>
-<div class="lbl" id="lblEquipSub" style="display:none"></div>
 <div class="row" id="equipSub" style="display:none"></div>
 <div class="lbl" id="lblPart"></div>
 <div class="row" id="catChips"></div>
@@ -156,10 +152,8 @@ const CAT_KEYS=["weapon","armor","accessory"];
 
 const T={
  ja:{title:"TBH アイテム検索",sub:"装備（武器/防具/アクセ/オフハンド）と強化素材（装飾/彫刻/碑文）を検索 — ヘッダクリックで並べ替え・ドラッグで列幅調整、名前クリックでSteamマーケットのページを開く。",
-   ph:"効果・名前で検索（攻撃速度 / エメラルド / Composite Bow / 指輪）",quick:"よく使う効果（DPS）",type:"アイテム種別",
-   typeHint:"タブ：1つ押すとその種別だけ・もう一度押すと全部",multiHint:"複数選択できます",
-   part:"部位",gear:"種類（指輪・頭 など）",color:"色（宝石のみ）",gem:"装飾(宝石)",engraving:"彫刻",inscription:"碑文(刻印)",equipment:"装備",unique:"特殊",base:"本体",
-   equipSub:`<b>装備</b>の絞り込み — ONで特殊ステータス（固有効果）付きの装備だけ表示`,
+   ph:"効果・名前で検索（攻撃速度 / エメラルド / Composite Bow / 指輪）",quick:"よく使う効果（DPS）",type:"アイテム種別",all:"すべて",specialChip:"特殊ステータスのみ",
+   part:"部位",gear:"種類（指輪・頭 など）",color:"色（宝石のみ）",gem:"装飾(宝石)",engraving:"彫刻",inscription:"碑文(刻印)",equipment:"装備",unique:"特殊",
    weapon:"武器",armor:"防具",accessory:"アクセ",offhand:"オフハンド",any:"全部位",scroll:"巻物",allRar:"全レアリティ",allLevel:"全レベル",lvl:"Lv",hits:n=>`${n} 件`,
    slot:s=>s,empty:"該当なし。検索ワードやフィルタを変えてください。",
    cols:{name:"名前",type:"種別",rarity:"レアリティ",slot:"部位",lv:"Lv",effect:"効果",value:"値",price:"価格",set:"セット効果"},
@@ -169,10 +163,8 @@ const T={
         `<b style="color:var(--t-inscription)">碑文(刻印)</b>=巻物で大量プールから1効果をランダム付与（巻物グレードごとに出る効果と値が異なる）。★=その効果・部位での最大値。アイテム名クリックでSteamマーケットの該当ページを別タブで開く。`+
         `<span style="color:var(--warn)">⚠</span>=低信頼の数値、実機要確認。`},
  en:{title:"TBH Item Search",sub:"Search equipment (weapon/armor/accessory/offhand) and enhancement materials (gem/engraving/inscription). Click a header to sort, drag to resize columns, click a name to open its Steam Market page.",
-   ph:"Search by effect or name (Attack Speed / Emerald / Composite Bow / Ring)",quick:"Common effects (DPS)",type:"Item type",
-   typeHint:"tabs: click one to show only that type, click again for all",multiHint:"multi-select",
-   part:"Slot",gear:"Gear type (Ring, Helmet…)",color:"Color (gems only)",gem:"Decoration (Gem)",engraving:"Engraving",inscription:"Inscription (碑文)",equipment:"Equipment",unique:"Special",base:"Base",
-   equipSub:`<b>Equipment</b> filter — ON shows only gear that has special stats (unique mods)`,
+   ph:"Search by effect or name (Attack Speed / Emerald / Composite Bow / Ring)",quick:"Common effects (DPS)",type:"Item type",all:"All",specialChip:"Special stats only",
+   part:"Slot",gear:"Gear type (Ring, Helmet…)",color:"Color (gems only)",gem:"Decoration (Gem)",engraving:"Engraving",inscription:"Inscription (碑文)",equipment:"Equipment",unique:"Special",
    weapon:"Weapon",armor:"Armor",accessory:"Accessory",offhand:"Offhand",any:"any slot",scroll:"Scroll",allRar:"All rarities",allLevel:"All levels",lvl:"Lv",hits:n=>`${n} results`,
    slot:s=>s,empty:"No matches. Try a different term or filter.",
    cols:{name:"Name",type:"Type",rarity:"Rarity",slot:"Slot",lv:"Lv",effect:"Effect",value:"Value",price:"Price",set:"Set effect"},
@@ -230,7 +222,10 @@ const INSC=DATA.inscriptions||{scrolls:[],effects:[]};
 const COLORS=[...new Set(INDEX.filter(x=>x.color).map(x=>x.color))];
 
 // ---- state ----
-const state={lang:"ja",q:"",stat:null,types:new Set(["equipment","gem","engraving","inscription"]),specialOnly:false,cats:new Set(),gears:new Set(),colors:new Set(),rarity:"",level:"",sortCol:"value",sortDir:"desc"};
+const ALL_TYPES=["equipment","gem","engraving","inscription"];
+const state={lang:"ja",q:"",stat:null,types:new Set(ALL_TYPES),specialOnly:false,cats:new Set(),gears:new Set(),colors:new Set(),rarity:"",level:"",sortCol:"value",sortDir:"desc"};
+const allTypesOn=()=>ALL_TYPES.every(t=>state.types.has(t));
+const soleEquipMode=()=>!allTypesOn()&&state.types.size===1&&state.types.has("equipment");
 const L=()=>T[state.lang];
 const lc=()=>state.lang==="ja"?"ja":"en";
 const statLabel=s=>state.lang==="ja"?s:(SM[s]||s);
@@ -245,15 +240,14 @@ function buildChips(){
   QUICK.forEach(s=>{const c=document.createElement("div");c.className="chip";c.dataset.stat=s;c.textContent=statLabel(s);
     c.onclick=()=>{state.stat=state.stat===s?null:s;el("q").value="";state.q="";render();};el("quickStats").appendChild(c);});
   el("typeChips").innerHTML="";
-  const ALL_TYPES=["equipment","gem","engraving","inscription"];
-  [["equipment","tequip"],["gem","tgem"],["engraving","tengraving"],["inscription","tinscription"]].forEach(([k,cls])=>{
-    const c=document.createElement("div");c.className="chip "+cls;c.dataset.type=k;c.textContent=L()[k];
-    // 排他選択: 押したらその種別だけに絞る。単独選択中の種別を再度押すと全表示に戻す
-    c.onclick=()=>{state.types=(state.types.size===1&&state.types.has(k))?new Set(ALL_TYPES):new Set([k]);render();};
+  // 単一選択タブ: すべて / 装備 / 装飾 / 彫刻 / 碑文。常に1つだけ点灯
+  [["all","tall"],["equipment","tequip"],["gem","tgem"],["engraving","tengraving"],["inscription","tinscription"]].forEach(([k,cls])=>{
+    const c=document.createElement("div");c.className="chip "+cls;c.dataset.type=k;c.textContent=k==="all"?L().all:L()[k];
+    c.onclick=()=>{state.types=k==="all"?new Set(ALL_TYPES):new Set([k]);state.specialOnly=false;render();};
     el("typeChips").appendChild(c);});
-  // 装備の絞り込み: 特殊ステータス付きの装備だけを表示
+  // 装備タブのときだけ出る絞り込み: 特殊ステータス付きの装備だけ表示
   el("equipSub").innerHTML="";
-  const su=document.createElement("div");su.className="chip tunique";su.dataset.special="1";su.textContent=L().unique;
+  const su=document.createElement("div");su.className="chip tunique";su.dataset.special="1";su.textContent=L().specialChip;
   su.onclick=()=>{state.specialOnly=!state.specialOnly;render();};el("equipSub").appendChild(su);
   el("catChips").innerHTML="";
   PART_KEYS.forEach(k=>{const c=document.createElement("div");c.className="chip";c.dataset.cat=k;c.textContent=L()[k];
@@ -271,10 +265,7 @@ function applyLangText(){
   document.documentElement.lang=state.lang;
   el("title").textContent=L().title;el("subtitle").textContent=L().sub;el("q").placeholder=L().ph;
   el("lang").textContent=state.lang==="ja"?"A":"あ";
-  el("lblQuick").textContent=L().quick;
-  el("lblType").innerHTML=`${L().type} <span class="hint">— ${L().typeHint}</span>`;
-  el("lblPart").innerHTML=`${L().part} <span class="hint">— ${L().multiHint}</span>`;
-  el("lblColor").textContent=L().color;
+  el("lblQuick").textContent=L().quick;el("lblType").textContent=L().type;el("lblPart").textContent=L().part;el("lblColor").textContent=L().color;
   const pinfo=PRICEDATA?`<br>価格: <a href="${PRICEDATA.sourceUrl}" target="_blank" style="color:var(--accent)">${PRICEDATA.source}</a> 経由（${PRICEDATA.currency} / Steam相場）｜取得: ${PRICEDATA.fetchedAt||"—"}。価格は更新スクリプト実行時点のスナップショット（再取得: <code>python3 tbh-fetch-prices.py</code>）。`
     :`<br><span style="color:var(--warn)">価格未取得</span> — <code>python3 tbh-fetch-prices.py</code> を実行すると tbh-market.com(Steam相場)の価格が表に入ります。`;
   el("note").innerHTML=L().note+`<br>${(DATA._meta&&DATA._meta.warning)||""}`+pinfo;
@@ -312,7 +303,7 @@ function inscMatch(e){
 }
 function equipMatch(e){
   if(!state.types.has("equipment"))return false;
-  if(state.specialOnly)return false;                            // 「特殊」ON時は本体を出さず固有効果付きのみ
+  if(state.specialOnly&&soleEquipMode())return false;           // 「特殊」ON時は本体を出さず固有効果付きのみ
   if(state.colors.size)return false;                            // 装備に色は無い
   if(state.cats.size&&!state.cats.has(e.cat))return false;
   if(state.gears.size&&!state.gears.has(e.gearJa))return false;  // 種類(指輪/頭 等)で絞り込み
@@ -322,7 +313,7 @@ function equipMatch(e){
   return qhit(state.q,[e.name,e.nameEn].concat((e.stats||[]).flatMap(s=>[s.ja,s.en])));
 }
 function uniqueMatch(u){
-  if(!(state.types.has("equipment")&&state.specialOnly))return false;   // 装備タブ＋「特殊」ON のときだけ
+  if(!(soleEquipMode()&&state.specialOnly))return false;   // 装備タブ単独＋「特殊」ON のときだけ
   if(state.stat||state.colors.size)return false;               // 特殊効果は数値stat/色では絞らない（文字検索で対応）
   if(state.cats.size&&!state.cats.has(u.cat))return false;
   if(state.gears.size&&!state.gears.has(u.gear))return false;   // 種類で絞り込み(uniqueのgearはJP)
@@ -424,15 +415,16 @@ function render(){
     el("gearChips").innerHTML=gearOpts.map(g=>`<div class="chip${state.gears.has(g)?' on':''}" onclick="_tg('${g}')">${g}</div>`).join("");
   } else {el("lblGear").style.display="none";el("gearChips").style.display="none";el("gearChips").innerHTML="";}
 
-  // 装備の絞り込みサブ行: 装備タブ選択時だけ表示。「特殊」=固有効果付きのみ
-  const equipOn=state.types.has("equipment");
-  el("equipSub").style.display=equipOn?"":"none";
-  el("lblEquipSub").style.display=equipOn?"":"none";
-  el("lblEquipSub").innerHTML=L().equipSub;
+  // 装備の絞り込みサブ行: 装備タブ単独選択時だけ表示。「特殊」=固有効果付きのみ
+  const seMode=soleEquipMode();
+  el("equipSub").style.display=seMode?"":"none";
   document.querySelectorAll("#equipSub .chip").forEach(c=>c.classList.toggle("on",state.specialOnly));
 
   document.querySelectorAll("#quickStats .chip").forEach(c=>c.classList.toggle("on",c.dataset.stat===state.stat));
-  document.querySelectorAll("#typeChips .chip").forEach(c=>c.classList.toggle("on",state.types.has(c.dataset.type)));
+  // タブは常に1つだけ点灯: 全選択時は「すべて」、単独選択時はその種別
+  const allOn=allTypesOn();
+  document.querySelectorAll("#typeChips .chip").forEach(c=>{const k=c.dataset.type;
+    c.classList.toggle("on",k==="all"?allOn:(!allOn&&state.types.size===1&&state.types.has(k)));});
   document.querySelectorAll("#catChips .chip").forEach(c=>c.classList.toggle("on",state.cats.has(c.dataset.cat)));
   document.querySelectorAll("#colorChips .chip").forEach(c=>c.classList.toggle("on",state.colors.has(c.dataset.color)));
 
