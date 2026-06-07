@@ -158,16 +158,22 @@ def ocr(img):
     return best
 
 
+_busy = threading.Lock()
+
 def on_trigger():
     """別スレッド: ゲームが前面の時だけ 撮影→OCR→照合 し、結果をキューに積む。"""
+    if foreground_exe() != GAME_EXE:
+        return                          # 他アプリでは何もしない＝「戻る」は普通に効く
+    if not _busy.acquire(blocking=False):
+        return                          # 処理中の連打は無視（OCR競合・古い結果表示を防ぐ）
     try:
-        if foreground_exe() != GAME_EXE:
-            return                      # 他アプリでは何もしない＝「戻る」は普通に効く
         xy = cursor_pos()
-        PQ.put(("__processing__", xy, None))   # 押した瞬間に「読み取り中…」を即表示
+        PQ.put(("__close__", None, None))      # ① 古いポップを消す（前の結果を撮らない＝stale防止）
+        time.sleep(0.12)
+        imgs = [grab(reg) for reg in NAME_REGIONS]   # ② ポップ無しの状態で先に撮影
+        PQ.put(("__processing__", xy, None))   # ③ 撮影後に「読み取り中」（写り込まない）
         found, dbg = [], []
-        for i, reg in enumerate(NAME_REGIONS):
-            img = grab(reg)
+        for i, img in enumerate(imgs):
             if CALIBRATE:
                 try: img.save(os.path.join(HERE, f"cap{i}.png"))
                 except Exception: pass
@@ -176,7 +182,7 @@ def on_trigger():
             r = matcher.match(t)
             if r:
                 found = r
-                break                   # どちらかのパネルで当たれば確定
+                break
         if CALIBRATE:
             try:
                 with open(os.path.join(HERE, "ocr-text.txt"), "w", encoding="utf-8") as f:
@@ -186,6 +192,8 @@ def on_trigger():
         PQ.put((found, xy, " || ".join(dbg)))
     except Exception:
         log_fatal("trigger error:\n" + traceback.format_exc())
+    finally:
+        _busy.release()
 
 
 # ---- ポップ表示（メインスレッドで） --------------------------------------
@@ -292,8 +300,16 @@ def run_tray(root):
 
 
 # ---- main ----------------------------------------------------------------
+def warmup():
+    """起動時にOCRエンジンを温める（初回押下の遅延・失敗を防ぐ）。"""
+    try:
+        winocr.recognize_pil_sync(Image.new("RGB", (48, 48)), "ja")
+    except Exception:
+        pass
+
 def main():
     threading.Thread(target=fetch_rate, daemon=True).start()   # 円レート取得（非同期）
+    threading.Thread(target=warmup, daemon=True).start()       # OCRウォームアップ
     root = tk.Tk()
     root.withdraw()
     # マウスの「戻る」サイドボタンで発動（ゲームが前面の時だけ on_trigger 内で判定）
