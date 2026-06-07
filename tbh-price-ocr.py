@@ -184,8 +184,8 @@ def show_popup(results, xy, text, root):
 
     win.update_idletasks()
     sw, sh = win.winfo_screenwidth(), win.winfo_screenheight()
-    x = min(xy[0] + 22, sw - win.winfo_width() - 8)
-    y = min(xy[1] + 22, sh - win.winfo_height() - 8)
+    x = sw - win.winfo_width() - 24      # 画面右上に固定（撮影範囲＝カーソル周辺と重ならない）
+    y = 70
     win.geometry(f"+{max(8, x)}+{max(8, y)}")
     win.bind("<Button-1>", lambda ev: win.destroy())
     win.after(int(POPUP_SECONDS * 1000), lambda: (win.winfo_exists() and win.destroy()))
