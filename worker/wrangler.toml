@@ -1,0 +1,8 @@
+name = "tbh-stats"
+main = "tbh-stats-worker.js"
+compatibility_date = "2025-01-01"
+
+# KV は wrangler が作成して id をここに自動追記する
+# [[kv_namespaces]]
+# binding = "STATS"
+# id = "..."
