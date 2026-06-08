@@ -1041,6 +1041,7 @@ def _hist_after(fn):
         except Exception: pass
 
 ICON_DIR = os.path.join(HERE, "iconcache")    # アイコンのローカルキャッシュ（CDNから取得→保存）
+ICON_PX = 56                                  # 履歴セルいっぱいの表示サイズ（ドット絵=NEAREST）
 _icon_cache = {}                              # hash -> ImageTk.PhotoImage(28px)
 _blank_icon = [None]                          # 28px透明（アイコン無し行の整列用）
 
@@ -1051,15 +1052,20 @@ def _get_icon(h, cb):
     if ph is not None: cb(ph); return
     def work():
         try:
+            import hashlib
             from PIL import ImageTk
             os.makedirs(ICON_DIR, exist_ok=True)
-            fp = os.path.join(ICON_DIR, re.sub(r"[^A-Za-z0-9_-]", "_", h)[:48] + ".png")
+            # ハッシュは先頭が全アイテム共通＝切り詰めると衝突。md5で一意なファイル名にする。
+            fp = os.path.join(ICON_DIR, hashlib.md5(h.encode()).hexdigest() + ".png")
             if not os.path.exists(fp):
-                url = "https://community.cloudflare.steamstatic.com/economy/image/" + h + "/64x64"
+                url = "https://community.cloudflare.steamstatic.com/economy/image/" + h + "/96x96"
                 req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
                 with urllib.request.urlopen(req, timeout=8) as r, open(fp, "wb") as f:
                     f.write(r.read())
-            im = Image.open(fp).convert("RGBA").resize((48, 48), Image.NEAREST)   # ドット絵なので大きめ＋NEAREST
+            im = Image.open(fp).convert("RGBA")
+            bb = im.getbbox()                        # 透明の余白を切ってセルいっぱいに
+            if bb: im = im.crop(bb)
+            im = im.resize((ICON_PX, ICON_PX), Image.NEAREST)
             w = _hist_win[0]
             if not (w and w.winfo_exists()): return
             def ready():
@@ -1240,7 +1246,7 @@ def _refresh_history():
     if _blank_icon[0] is None:
         try:
             from PIL import ImageTk
-            _blank_icon[0] = ImageTk.PhotoImage(Image.new("RGBA", (48, 48), (0, 0, 0, 0)))
+            _blank_icon[0] = ImageTk.PhotoImage(Image.new("RGBA", (ICON_PX, ICON_PX), (0, 0, 0, 0)))
         except Exception: pass
     if not _hist:
         tk.Label(inner, text=T("hist_empty"), bg=C_CARD, fg=C_META, anchor="w").pack(fill="x", padx=12, pady=10)
