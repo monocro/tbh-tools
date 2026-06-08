@@ -320,7 +320,7 @@ def ocr_worker():
             while True: WORKQ.get_nowait()      # 連打はまとめて1回に
         except queue.Empty:
             pass
-        if time.time() - _last_trig[0] < 0.6:   # デバウンス：処理中に届いた2発目などの二重発動を無視
+        if time.time() - _last_trig[0] < 0.25:  # デバウンス：処理中に来た重複は終了瞬間に弾く（短くて快適）
             continue
         try:
             if foreground_exe() != GAME_EXE:
@@ -388,7 +388,7 @@ def ocr_worker():
         except Exception:
             log_fatal("worker error:\n" + traceback.format_exc())
         finally:
-            _last_trig[0] = time.time()         # 処理完了時刻＝この後0.6秒は再発動を無視
+            _last_trig[0] = time.time()         # 処理完了時刻＝直後の重複シグナルだけ弾く
 
 
 # ---- ポップ表示（メインスレッドで） --------------------------------------
@@ -488,6 +488,8 @@ def _apply_lang(m):
 _trigger = {"kind": "mouse", "value": SIDE_BUTTON}   # 既定：マウス戻る(サイド)
 _trig_hook = [None]                                  # (kind, handler) 解除用
 _set_win = [None]                                    # 設定ウィンドウ
+_help_win = [None]                                   # 使い方ウィンドウ
+_intro_seen = [False]                                # 初回起動の使い方を表示済みか
 
 _MOUSE_LBL = {
     "ja": {"x": "マウス サイド(戻る)", "x2": "マウス サイド(進む)", "middle": "マウス 中ボタン",
@@ -506,7 +508,8 @@ def _trigger_label(kind=None, value=None):
 def _save_settings():
     try:
         with open(SET_FILE, "w", encoding="utf-8") as f:
-            json.dump({"trigger": _trigger, "lang": _lang_mode[0]}, f, ensure_ascii=False)
+            json.dump({"trigger": _trigger, "lang": _lang_mode[0], "intro_seen": _intro_seen[0]},
+                      f, ensure_ascii=False)
     except Exception: pass
 
 def _load_settings():
@@ -517,6 +520,7 @@ def _load_settings():
             _trigger.update(kind=t["kind"], value=t["value"])
         if d.get("lang") in ("ja", "en"):
             _lang_mode[0] = d["lang"]
+        _intro_seen[0] = bool(d.get("intro_seen"))
     except Exception: pass
 
 def _bind_trigger():
@@ -1040,6 +1044,56 @@ def toggle_history(root):
     else: hide_history()
 
 
+def show_help(root):
+    if _help_win[0] and _help_win[0].winfo_exists():
+        _help_win[0].deiconify(); _help_win[0].lift(); return
+    ja = _ui_lang == "ja"
+    win = tk.Toplevel(root); win.config(bg=C_CARD); win.attributes("-topmost", True); win.resizable(False, False)
+    win.title(f"{APP_NAME} — " + ("使い方" if ja else "How to use"))
+    win.protocol("WM_DELETE_WINDOW", win.withdraw)
+    ft = tkfont.Font(family="Yu Gothic UI", size=15, weight="bold")
+    fh = tkfont.Font(family="Yu Gothic UI", size=10, weight="bold")
+    fb = tkfont.Font(family="Yu Gothic UI", size=10)
+    W = 380
+    tk.Label(win, text=APP_NAME, bg=C_CARD, fg=C_ACCENT, font=ft, anchor="w").pack(fill="x", padx=22, pady=(18, 0))
+    tk.Label(win, text=("アイテムを指すだけで Steamマーケット価格" if ja
+                        else "Steam Market prices, just by pointing at an item"),
+             bg=C_CARD, fg=C_META, font=fb, anchor="w").pack(fill="x", padx=22, pady=(0, 12))
+    steps = ([("① ゲームを前面に", "TBH: Task Bar Hero のウィンドウを最前面に。"),
+              ("② アイテムにカーソル", "持ち物や市場のアイテムにマウスを乗せる。"),
+              ("③ 発動キーを押す", "既定はマウスのサイドボタン（戻る）。設定で変更可。"),
+              ("→ 価格がポップ表示", "最安値・中央値。🛒でSteam市場、🕘で履歴を開く。")]
+             if ja else
+             [("① Focus the game", "Bring TBH: Task Bar Hero to the front."),
+              ("② Hover an item", "Point your mouse at an item (bag or market)."),
+              ("③ Press the hotkey", "Default: mouse side (back) button. Change it in Settings."),
+              ("→ Price pops up", "Lowest + median. 🛒 opens Steam Market, 🕘 the history.")])
+    for t, d in steps:
+        r = tk.Frame(win, bg=C_CARD); r.pack(fill="x", padx=22, pady=2)
+        tk.Label(r, text=t, bg=C_CARD, fg=C_NAME, font=fh, anchor="w").pack(fill="x")
+        tk.Label(r, text=d, bg=C_CARD, fg=C_META, font=fb, anchor="w", justify="left", wraplength=W - 16).pack(fill="x")
+    tk.Frame(win, bg="#2a2f3a", height=1).pack(fill="x", padx=22, pady=(10, 8))
+    tips = (["ポップは 外をクリック / カーソルを外す / Esc で閉じる",
+             "名前が違う時はレア度ピルや名前で選び直し",
+             "履歴：トレイ『履歴一覧』で表示。右クリックでお気に入り・名前変更・レア度・削除、『全部更新』も",
+             "発動キー・表示言語は『設定』で変更",
+             "安全：ゲームには干渉しません（自分の画面OCR＋キーのみ）"]
+            if ja else
+            ["Close the popup by clicking away, moving off it, or pressing Esc",
+             "Wrong name? re-pick via the rarity pill or the name",
+             "History: open from tray. Right-click a row for Favourite / Rename / Rarity / Delete, plus 'Update all'",
+             "Change the hotkey & language in Settings",
+             "Safe: it never touches the game (screen OCR + hotkey only)"])
+    for t in tips:
+        tk.Label(win, text="・ " + t, bg=C_CARD, fg=C_META, font=fb, anchor="w",
+                 justify="left", wraplength=W - 8).pack(fill="x", padx=22, pady=1)
+    round_pill(win, "閉じる" if ja else "Close", C_ACCENT, "#0c0c0c", win.withdraw, fb).pack(pady=(12, 18))
+    win.update_idletasks()
+    win.geometry(f"{max(W, win.winfo_reqwidth())}x{win.winfo_reqheight()}")
+    _help_win[0] = win
+    _keep_on_top(win)
+
+
 def show_settings(root):
     if _set_win[0] and _set_win[0].winfo_exists():
         _set_win[0].deiconify(); _set_win[0].lift(); return
@@ -1113,7 +1167,11 @@ def show_settings(root):
                "#2a2f3a", C_NAME, reset, fs).pack(side="left")
 
     # ── フッター：クレジット＋控えめな寄付＋免責 ──
-    foot = tk.Frame(win, bg=C_CARD); foot.pack(fill="x", padx=18, pady=(14, 2))
+    hf = tk.Frame(win, bg=C_CARD); hf.pack(fill="x", padx=18, pady=(6, 0))
+    round_pill(hf, "❓ " + ("使い方" if ja else "How to use"), "#2a2f3a", C_NAME,
+               lambda: show_help(root), fs).pack(side="left")
+
+    foot = tk.Frame(win, bg=C_CARD); foot.pack(fill="x", padx=18, pady=(10, 2))
     tk.Label(foot, text=f"{APP_NAME} v{APP_VERSION} · by {APP_AUTHOR}",
              bg=C_CARD, fg=C_META, font=fs, anchor="w").pack(side="left")
     if KOFI_URL:
@@ -1148,6 +1206,9 @@ def poll(root):
                 continue
             if results == "__settings__":          # トレイから設定を開く
                 show_settings(root)
+                continue
+            if results == "__help__":              # 使い方を開く
+                show_help(root)
                 continue
             if results == "__close__":
                 for w in _open[:]:
@@ -1208,6 +1269,8 @@ def run_tray(root):
                          lambda icon, item: _do_update(),
                          visible=lambda item: _update_info[0] is not None),
         pystray.MenuItem(lambda item: f"{_t('キー：', 'Key: ')}{_trigger_label()}", None, enabled=False),
+        pystray.MenuItem(lambda item: _t("使い方", "How to use"),
+                         lambda icon, item: PQ.put(("__help__", None, None))),
         pystray.MenuItem(lambda item: _t("設定", "Settings"),
                          lambda icon, item: PQ.put(("__settings__", None, None))),
         pystray.MenuItem(lambda item: _t("履歴一覧", "History"), _toggle_hist,
@@ -1232,6 +1295,9 @@ def main():
     threading.Thread(target=ocr_worker, daemon=True).start()    # OCR常駐ワーカー（初期化1回）
     _bind_trigger()                                             # 設定されたキー/ボタンで発動（既定:マウス戻る）
     threading.Thread(target=run_tray, args=(root,), daemon=True).start()
+    if not _intro_seen[0]:                                     # 初回起動：使い方を表示
+        _intro_seen[0] = True; _save_settings()
+        root.after(700, lambda: show_help(root))
     poll(root)
     root.mainloop()
 
