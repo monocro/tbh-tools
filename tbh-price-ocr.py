@@ -394,7 +394,7 @@ def _trigger_label(kind=None, value=None):
     kind = kind or _trigger["kind"]; value = value if value is not None else _trigger["value"]
     if kind == "mouse":
         return _MOUSE_LBL.get(value, "マウス " + str(value))
-    return str(value).upper()
+    return " + ".join(p.capitalize() for p in str(value).split("+"))   # ctrl+shift+p → Ctrl + Shift + P
 
 def _save_settings():
     try:
@@ -431,7 +431,9 @@ def _bind_trigger():
         log_fatal("bind_trigger:\n" + traceback.format_exc())
 
 def _capture_trigger(on_done):
-    """次に押されたマウスボタン or キーを1つ取得して on_done(kind, value) を呼ぶ。"""
+    """キーは「押している組み合わせ」を最初に離した瞬間に確定（Ctrl+Shift+P等）。
+    単キー(F8)も、マウスボタンも可。on_done(kind, value) を呼ぶ。"""
+    pressed = []           # 押された順のキー名（重複なし）
     state = {"done": False}
     def finish(kind, value):
         if state["done"]: return
@@ -445,8 +447,10 @@ def _capture_trigger(on_done):
         if isinstance(e, mouse.ButtonEvent) and e.event_type == "down":
             finish("mouse", e.button)
     def on_key(e):
-        if getattr(e, "event_type", None) == "down" and getattr(e, "name", None):
-            finish("key", e.name)
+        if e.event_type == "down":
+            if e.name and e.name not in pressed: pressed.append(e.name)
+        elif e.event_type == "up" and pressed:   # 最初に離した瞬間に組み合わせを確定
+            finish("key", "+".join(pressed))
     mh = mouse.hook(on_mouse)
     kh = keyboard.hook(on_key)
 
@@ -925,34 +929,49 @@ def show_settings(root):
     if _set_win[0] and _set_win[0].winfo_exists():
         _set_win[0].deiconify(); _set_win[0].lift(); return
     ja = _ui_lang == "ja"
-    win = tk.Toplevel(root); win.title("TBH 設定"); win.config(bg=C_CARD)
-    win.geometry("320x190"); win.attributes("-topmost", True)
+    win = tk.Toplevel(root); win.title("設定"); win.config(bg=C_CARD)
+    win.attributes("-topmost", True); win.resizable(False, False)
     win.protocol("WM_DELETE_WINDOW", win.withdraw)
-    f = tkfont.Font(family="Yu Gothic UI", size=11)
-    fb = tkfont.Font(family="Yu Gothic UI", size=10, weight="bold")
-    tk.Label(win, text="ポップアップを出すショートカット" if ja else "Popup shortcut",
-             bg=C_CARD, fg=C_NAME, font=fb, anchor="w").pack(fill="x", padx=16, pady=(14, 6))
-    cur = tk.Label(win, text=_trigger_label(), bg="#0d1016", fg=C_ACCENT, font=f, anchor="w")
-    cur.pack(fill="x", padx=16, ipady=6, ipadx=8)
-    tk.Label(win, text=("「割り当て」を押して、使いたいキーかマウスボタンを押してください"
-                        if ja else "Click Assign, then press any key or mouse button"),
-             bg=C_CARD, fg=C_META, font=("Yu Gothic UI", 8), anchor="w",
-             wraplength=288, justify="left").pack(fill="x", padx=16, pady=(8, 4))
-    bf = tk.Frame(win, bg=C_CARD); bf.pack(fill="x", padx=16, pady=(8, 12))
-    def assign():
-        cur.config(text=("押してください…" if ja else "Press any key/button…"), fg=C_ERR)
+    f = tkfont.Font(family="Yu Gothic UI", size=12)
+    fb = tkfont.Font(family="Yu Gothic UI", size=11, weight="bold")
+    fs = tkfont.Font(family="Yu Gothic UI", size=9)
+
+    tk.Label(win, text="ポップアップを出すキー" if ja else "Popup shortcut",
+             bg=C_CARD, fg=C_NAME, font=fb, anchor="w").grid(row=0, column=0, sticky="w", padx=20, pady=(18, 4))
+    state = {"capturing": False}
+    # 現在キーの欄＝そのままクリックで割り当て開始（要素は1つ）
+    field = tk.Label(win, text=_trigger_label(), bg="#0d1016", fg=C_ACCENT, font=f,
+                     anchor="w", cursor="hand2", padx=12, pady=10)
+    field.grid(row=1, column=0, sticky="we", padx=20)
+    tk.Label(win, text=("↑ ここをクリックして、使いたいキー（Ctrl+Shift+P等の組み合わせ可）か"
+                        "マウスボタンを押す" if ja else
+                        "Click above, then press a key (combos like Ctrl+Shift+P ok) or mouse button"),
+             bg=C_CARD, fg=C_META, font=fs, anchor="w", justify="left",
+             wraplength=320).grid(row=2, column=0, sticky="we", padx=20, pady=(6, 2))
+
+    def start_capture(*_):
+        if state["capturing"]: return
+        state["capturing"] = True
+        field.config(text=("キーかボタンを押す…" if ja else "Press a key or button…"), fg=C_ERR)
         def done(kind, value):
             def apply():
+                state["capturing"] = False
                 _trigger.update(kind=kind, value=value)
                 _bind_trigger(); _save_settings()
-                if cur.winfo_exists(): cur.config(text=_trigger_label(), fg=C_ACCENT)
+                if field.winfo_exists(): field.config(text=_trigger_label(), fg=C_ACCENT)
             if win.winfo_exists(): win.after(0, apply)
         _capture_trigger(done)
+    field.bind("<Button-1>", start_capture)
+
     def reset():
         _trigger.update(kind="mouse", value="x"); _bind_trigger(); _save_settings()
-        cur.config(text=_trigger_label(), fg=C_ACCENT)
-    round_pill(bf, "割り当て" if ja else "Assign", C_ACCENT, "#0c0c0c", assign, fb).pack(side="left")
-    round_pill(bf, "既定に戻す" if ja else "Default", "#2a2f3a", C_NAME, reset, fb).pack(side="left", padx=(8, 0))
+        field.config(text=_trigger_label(), fg=C_ACCENT)
+    bf = tk.Frame(win, bg=C_CARD); bf.grid(row=3, column=0, sticky="we", padx=20, pady=(12, 18))
+    round_pill(bf, "既定に戻す（マウス サイド戻る）" if ja else "Reset to default",
+               "#2a2f3a", C_NAME, reset, fs).pack(side="left")
+    win.columnconfigure(0, weight=1)
+    win.update_idletasks()
+    win.geometry(f"{win.winfo_reqwidth()}x{win.winfo_reqheight()}")   # 内容ぴったりに固定
     _set_win[0] = win
     _keep_on_top(win)
 
@@ -1023,7 +1042,7 @@ def run_tray(root):
     ])
     menu = pystray.Menu(
         pystray.MenuItem(lambda item: f"キー：{_trigger_label()}", None, enabled=False),
-        pystray.MenuItem("設定（ショートカット）", lambda icon, item: PQ.put(("__settings__", None, None))),
+        pystray.MenuItem("設定", lambda icon, item: PQ.put(("__settings__", None, None))),
         pystray.MenuItem("履歴一覧", _toggle_hist, checked=lambda item: _hist_visible[0]),
         pystray.MenuItem("履歴の上限", limit_menu),
         pystray.MenuItem("終了", _quit),
