@@ -411,6 +411,42 @@ def _keep_on_top(win):
         win.after(120, tick)
     tick()
 
+def _dismiss(win):
+    """ポップの閉じ方のマナー: ①カーソルが一度乗ってから外れて0.7秒で閉じる(ホバーアウト)
+    ②UI外を左クリックで即閉じ(ライトディスミス) ③一度も乗らなければ8秒で自動消滅。
+    メニュー展開中(grab)は判定を止める。"""
+    try: import ctypes
+    except Exception: return
+    u = ctypes.windll.user32
+    class _PT(ctypes.Structure): _fields_ = [("x", ctypes.c_long), ("y", ctypes.c_long)]
+    s = {"entered": False, "out": 0, "age": 0}
+    def tick():
+        if not win.winfo_exists(): return
+        s["age"] += 1
+        try:
+            if win.grab_current():            # メニュー展開中は何もしない
+                win.after(80, tick); return
+        except Exception: pass
+        try:
+            pt = _PT(); u.GetCursorPos(ctypes.byref(pt))
+            x, y, w, h = win.winfo_rootx(), win.winfo_rooty(), win.winfo_width(), win.winfo_height()
+            m = 10
+            inside = (x - m) <= pt.x <= (x + w + m) and (y - m) <= pt.y <= (y + h + m)
+            lbtn = u.GetAsyncKeyState(0x01) & 0x8000
+        except Exception:
+            win.after(80, tick); return
+        if inside:
+            s["entered"] = True; s["out"] = 0
+        elif lbtn:                            # UI外を左クリック→即閉じ
+            win.destroy(); return
+        elif s["entered"]:                    # 乗ってから外れた→0.7秒で閉じ
+            s["out"] += 1
+            if s["out"] * 0.08 >= 0.7: win.destroy(); return
+        elif s["age"] * 0.08 >= 8:            # 一度も乗らず8秒→自動消滅
+            win.destroy(); return
+        win.after(80, tick)
+    win.after(80, tick)
+
 def round_pill(parent, text, fill, fg, cmd, font, padx=14, pady=6):
     """角丸（ピル型）ボタン。canvasで描画。"""
     tw, th = font.measure(text), font.metrics("linespace")
@@ -578,6 +614,7 @@ def show_popup(results, xy, text, root):
     render(e)
     _round_corners(win)        # Win11のOS角丸（透過なし＝クリックで消えない）
     _keep_on_top(win)          # ゲームの前へ。背後に回り込むのを防ぐ
+    _dismiss(win)              # 外側クリック/ホバーアウト/無操作で閉じるマナー
     _open.append(win)
 
 
