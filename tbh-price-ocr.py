@@ -430,9 +430,9 @@ def _bind_trigger():
     except Exception:
         log_fatal("bind_trigger:\n" + traceback.format_exc())
 
-def _capture_trigger(on_done):
+def _capture_trigger(on_done, on_progress=None):
     """キーは「押している組み合わせ」を最初に離した瞬間に確定（Ctrl+Shift+P等）。
-    単キー(F8)も、マウスボタンも可。on_done(kind, value) を呼ぶ。"""
+    押している間は on_progress(combo) で途中経過を通知。単キー(F8)もマウスボタンも可。"""
     pressed = []           # 押された順のキー名（重複なし）
     state = {"done": False}
     def finish(kind, value):
@@ -449,6 +449,7 @@ def _capture_trigger(on_done):
     def on_key(e):
         if e.event_type == "down":
             if e.name and e.name not in pressed: pressed.append(e.name)
+            if on_progress: on_progress("+".join(pressed))   # 押している間を実況
         elif e.event_type == "up" and pressed:   # 最初に離した瞬間に組み合わせを確定
             finish("key", "+".join(pressed))
     mh = mouse.hook(on_mouse)
@@ -960,7 +961,12 @@ def show_settings(root):
                 _bind_trigger(); _save_settings()
                 if field.winfo_exists(): field.config(text=_trigger_label(), fg=C_ACCENT)
             if win.winfo_exists(): win.after(0, apply)
-        _capture_trigger(done)
+        def prog(combo):                         # 押している最中のキーを実況表示
+            def up():
+                if field.winfo_exists() and state["capturing"]:
+                    field.config(text=_trigger_label("key", combo), fg=C_NAME)
+            if win.winfo_exists(): win.after(0, up)
+        _capture_trigger(done, prog)
     field.bind("<Button-1>", start_capture)
 
     def reset():
