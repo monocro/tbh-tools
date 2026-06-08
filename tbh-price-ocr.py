@@ -566,6 +566,7 @@ _hist_inner = [None]       # (canvas, inner) の参照
 _hist_visible = [False]    # トレイのオン/オフ状態
 _hist_limit = [50]         # 履歴の上限（0=無制限）。お気に入りは上限の対象外
 _hist_status = [None]      # ヘッダの「更新中/更新時刻」ラベル
+_hist_geo = [None]         # 履歴ウィンドウの位置・サイズ（記憶して次回復元）
 HIST_FILE = os.path.join(HERE, "tbh-price-history.json")   # 履歴の保存先（再起動で消えないように）
 SET_FILE = os.path.join(HERE, "tbh-price-settings.json")   # 設定の保存先
 
@@ -672,7 +673,8 @@ def _trigger_label(kind=None, value=None):
 def _save_settings():
     try:
         with open(SET_FILE, "w", encoding="utf-8") as f:
-            json.dump({"trigger": _trigger, "lang": _lang_mode[0], "intro_seen": _intro_seen[0]},
+            json.dump({"trigger": _trigger, "lang": _lang_mode[0], "intro_seen": _intro_seen[0],
+                       "hist_geo": _hist_geo[0]},
                       f, ensure_ascii=False)
     except Exception: pass
 
@@ -685,6 +687,7 @@ def _load_settings():
         if d.get("lang") in LANGS:
             _lang_mode[0] = d["lang"]
         _intro_seen[0] = bool(d.get("intro_seen"))
+        if isinstance(d.get("hist_geo"), str): _hist_geo[0] = d["hist_geo"]
     except Exception: pass
 
 def _bind_trigger():
@@ -1173,8 +1176,12 @@ def show_history(root):
         _hist_win[0].deiconify(); _refresh_history(); return
     win = tk.Toplevel(root)
     win.title("TBH MarketLens — " + T("hist_title"))
-    win.config(bg=C_CARD); win.geometry("360x460"); win.attributes("-topmost", True)
+    win.config(bg=C_CARD); win.geometry(_hist_geo[0] or "360x460"); win.attributes("-topmost", True)
     win.protocol("WM_DELETE_WINDOW", lambda: toggle_history(root))   # ×でオフに同期
+    def _remember_geo(e):                        # 移動/リサイズを記憶（次回復元）
+        if e.widget is win and win.winfo_width() > 80:
+            _hist_geo[0] = win.geometry()
+    win.bind("<Configure>", _remember_geo)
     f_hbtn = tkfont.Font(family="Yu Gothic UI", size=9)
     hdr = tk.Frame(win, bg=C_CARD); hdr.pack(fill="x", padx=12, pady=(10, 0))
     tk.Label(hdr, text=T("hist_title"), bg=C_CARD, fg=C_NAME,
@@ -1200,8 +1207,11 @@ def show_history(root):
 
 def hide_history():
     if _hist_win[0]:
-        try: _hist_win[0].withdraw()
+        try:
+            if _hist_win[0].winfo_width() > 80: _hist_geo[0] = _hist_win[0].geometry()
+            _hist_win[0].withdraw()
         except Exception: pass
+    _save_settings()           # 位置・サイズを保存
 
 def toggle_history(root):
     _hist_visible[0] = not _hist_visible[0]
