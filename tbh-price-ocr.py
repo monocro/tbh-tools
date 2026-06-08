@@ -69,6 +69,13 @@ except Exception as e:
         pass
     sys.exit(1)
 
+import ctypes as _ctypes
+try:                                  # DPI対応: GetCursorPos/GetWindowRect を mss と同じ物理座標に揃える
+    _ctypes.windll.shcore.SetProcessDpiAwareness(2)
+except Exception:
+    try: _ctypes.windll.user32.SetProcessDPIAware()
+    except Exception: pass
+
 matcher = Matcher(os.path.join(HERE, "tbh-price-lookup.json"))
 try:
     _TPL = cv2.imread(os.path.join(HERE, "frame_tpl.png"))   # 名前枠の左角テンプレート（定数ピクセル）
