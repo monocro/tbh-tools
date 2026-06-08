@@ -962,10 +962,16 @@ def show_settings(root):
     fb = tkfont.Font(family="Yu Gothic UI", size=11, weight="bold")
     fs = tkfont.Font(family="Yu Gothic UI", size=9)
 
-    # 表示言語
-    tk.Label(win, text="表示言語" if ja else "Language", bg=C_CARD, fg=C_NAME,
-             font=fb, anchor="w").grid(row=0, column=0, sticky="w", padx=20, pady=(18, 4))
-    langf = tk.Frame(win, bg=C_CARD); langf.grid(row=1, column=0, sticky="w", padx=20)
+    state = {"capturing": False}
+    def section(title):                          # カテゴリーごとの枠（見出し付きカード）
+        c = tk.Frame(win, bg="#11141a", highlightbackground="#2a2f3a", highlightthickness=1)
+        c.pack(fill="x", padx=16, pady=(14, 0))
+        tk.Label(c, text=title, bg="#11141a", fg=C_ACCENT, font=fb, anchor="w").pack(fill="x", padx=14, pady=(10, 8))
+        return c
+
+    # ── 表示言語 ──
+    c1 = section("表示言語" if ja else "Language")
+    langf = tk.Frame(c1, bg="#11141a"); langf.pack(fill="x", padx=14, pady=(0, 14))
     def choose_lang(m):
         _apply_lang(m)
         if _hist_visible[0]: _refresh_history()
@@ -975,18 +981,16 @@ def show_settings(root):
         round_pill(langf, ("● " if on else "") + label, C_ACCENT if on else "#2a2f3a",
                    "#0c0c0c" if on else C_NAME, lambda m=m: choose_lang(m), fs).pack(side="left", padx=(0, 6))
 
-    tk.Label(win, text="ポップアップを出すキー" if ja else "Popup shortcut",
-             bg=C_CARD, fg=C_NAME, font=fb, anchor="w").grid(row=2, column=0, sticky="w", padx=20, pady=(16, 4))
-    state = {"capturing": False}
-    # 現在キーの欄＝そのままクリックで割り当て開始（要素は1つ）
-    field = tk.Label(win, text=_trigger_label(), bg="#0d1016", fg=C_ACCENT, font=f,
+    # ── 発動キー ──
+    c2 = section("発動キー" if ja else "Shortcut")
+    field = tk.Label(c2, text=_trigger_label(), bg="#0d1016", fg=C_ACCENT, font=f,
                      anchor="w", cursor="hand2", padx=12, pady=10)
-    field.grid(row=3, column=0, sticky="we", padx=20)
-    tk.Label(win, text=("↑ ここをクリックして、使いたいキー（Ctrl+Shift+P等の組み合わせ可）か"
-                        "マウスボタンを押す" if ja else
-                        "Click above, then press a key (combos like Ctrl+Shift+P ok) or mouse button"),
-             bg=C_CARD, fg=C_META, font=fs, anchor="w", justify="left",
-             wraplength=320).grid(row=4, column=0, sticky="we", padx=20, pady=(6, 2))
+    field.pack(fill="x", padx=14)
+    tk.Label(c2, text=("↑ クリックして、使いたいキー（Ctrl+Shift+P等の組み合わせ可）か"
+                       "マウスボタンを押す" if ja else
+                       "Click above, then press a key (combos ok) or mouse button"),
+             bg="#11141a", fg=C_META, font=fs, anchor="w", justify="left",
+             wraplength=300).pack(fill="x", padx=14, pady=(6, 4))
 
     def start_capture(*_):
         if state["capturing"]: return
@@ -1006,14 +1010,14 @@ def show_settings(root):
             if win.winfo_exists(): win.after(0, up)
         _capture_trigger(done, prog)
     field.bind("<Button-1>", start_capture)
-
     def reset():
         _trigger.update(kind="mouse", value="x"); _bind_trigger(); _save_settings()
         field.config(text=_trigger_label(), fg=C_ACCENT)
-    bf = tk.Frame(win, bg=C_CARD); bf.grid(row=5, column=0, sticky="we", padx=20, pady=(12, 18))
-    round_pill(bf, "既定に戻す（マウス サイド戻る）" if ja else "Reset to default",
+    rf = tk.Frame(c2, bg="#11141a"); rf.pack(fill="x", padx=14, pady=(2, 12))
+    round_pill(rf, "既定に戻す（マウス サイド戻る）" if ja else "Reset to default",
                "#2a2f3a", C_NAME, reset, fs).pack(side="left")
-    win.columnconfigure(0, weight=1)
+
+    tk.Frame(win, bg=C_CARD, height=8).pack()    # 下余白
     win.update_idletasks()
     win.geometry(f"{win.winfo_reqwidth()}x{win.winfo_reqheight()}")   # 内容ぴったりに固定
     _set_win[0] = win
