@@ -322,12 +322,15 @@ def ocr_worker():
                     sx, sy = ox + cx, oy + cy
                     d2 = (sx - xy[0]) ** 2 + (sy - xy[1]) ** 2
                     cands.append((best_r[0]["score"], d2, sx, sy, best_r, bx, by, name, rank))
-            # ゲーム言語判定（全枠OCRのASCII/日本語比率）
+            # 表示言語：設定が ja/en なら固定、auto ならゲーム言語を判定（ASCII/日本語比率）
             global _ui_lang
-            alltext = " ".join((n or "") + (r or "") for n, r, *_ in boxes)
-            asc = sum(1 for c in alltext if c.isascii() and c.isalpha())
-            jpn = sum(1 for c in alltext if ord(c) > 0x3040)
-            _ui_lang = "en" if asc > jpn else "ja"
+            if _lang_mode[0] in ("ja", "en"):
+                _ui_lang = _lang_mode[0]
+            else:
+                alltext = " ".join((n or "") + (r or "") for n, r, *_ in boxes)
+                asc = sum(1 for c in alltext if c.isascii() and c.isalpha())
+                jpn = sum(1 for c in alltext if ord(c) > 0x3040)
+                _ui_lang = "en" if asc > jpn else "ja"
             found, chosen = [], None
             if cands:
                 ax, ay = min(cands, key=lambda c: c[1])[2:4]   # カーソル最近の枠＝指してる位置
@@ -382,6 +385,26 @@ _hist_status = [None]      # ヘッダの「更新中/更新時刻」ラベル
 HIST_FILE = os.path.join(HERE, "tbh-price-history.json")   # 履歴の保存先（再起動で消えないように）
 SET_FILE = os.path.join(HERE, "tbh-price-settings.json")   # 設定の保存先
 
+# ---- 表示言語（auto=ゲームに追従 / ja / en）。起動時はPCの言語を既定に ----
+_lang_mode = [None]        # None=未設定（起動時にPC言語へ）, "auto" / "ja" / "en"
+
+def _detect_pc_lang():
+    try:
+        lid = _ctypes.windll.kernel32.GetUserDefaultUILanguage()
+        if (lid & 0x3ff) == 0x11: return "ja"       # 日本語の主要言語ID
+    except Exception: pass
+    try:
+        import locale
+        if (locale.getdefaultlocale()[0] or "").lower().startswith("ja"): return "ja"
+    except Exception: pass
+    return "en"
+
+def _apply_lang(m):
+    global _ui_lang
+    _lang_mode[0] = m
+    if m in ("ja", "en"): _ui_lang = m
+    _save_settings()
+
 # ---- 発動トリガー（マウスボタン/キーボード、ユーザーが自由に割り当て） ----
 _trigger = {"kind": "mouse", "value": SIDE_BUTTON}   # 既定：マウス戻る(サイド)
 _trig_hook = [None]                                  # (kind, handler) 解除用
@@ -399,7 +422,7 @@ def _trigger_label(kind=None, value=None):
 def _save_settings():
     try:
         with open(SET_FILE, "w", encoding="utf-8") as f:
-            json.dump({"trigger": _trigger}, f, ensure_ascii=False)
+            json.dump({"trigger": _trigger, "lang": _lang_mode[0]}, f, ensure_ascii=False)
     except Exception: pass
 
 def _load_settings():
@@ -408,6 +431,8 @@ def _load_settings():
         t = d.get("trigger") or {}
         if t.get("kind") in ("mouse", "key") and t.get("value"):
             _trigger.update(kind=t["kind"], value=t["value"])
+        if d.get("lang") in ("auto", "ja", "en"):
+            _lang_mode[0] = d["lang"]
     except Exception: pass
 
 def _bind_trigger():
@@ -937,18 +962,31 @@ def show_settings(root):
     fb = tkfont.Font(family="Yu Gothic UI", size=11, weight="bold")
     fs = tkfont.Font(family="Yu Gothic UI", size=9)
 
+    # 表示言語
+    tk.Label(win, text="表示言語" if ja else "Language", bg=C_CARD, fg=C_NAME,
+             font=fb, anchor="w").grid(row=0, column=0, sticky="w", padx=20, pady=(18, 4))
+    langf = tk.Frame(win, bg=C_CARD); langf.grid(row=1, column=0, sticky="w", padx=20)
+    def choose_lang(m):
+        _apply_lang(m)
+        if _hist_visible[0]: _refresh_history()
+        win.destroy(); _set_win[0] = None; show_settings(root)   # 言語反映のため建て直し
+    for m, label in (("auto", "自動" if ja else "Auto"), ("ja", "日本語"), ("en", "English")):
+        on = _lang_mode[0] == m
+        round_pill(langf, ("● " if on else "") + label, C_ACCENT if on else "#2a2f3a",
+                   "#0c0c0c" if on else C_NAME, lambda m=m: choose_lang(m), fs).pack(side="left", padx=(0, 6))
+
     tk.Label(win, text="ポップアップを出すキー" if ja else "Popup shortcut",
-             bg=C_CARD, fg=C_NAME, font=fb, anchor="w").grid(row=0, column=0, sticky="w", padx=20, pady=(18, 4))
+             bg=C_CARD, fg=C_NAME, font=fb, anchor="w").grid(row=2, column=0, sticky="w", padx=20, pady=(16, 4))
     state = {"capturing": False}
     # 現在キーの欄＝そのままクリックで割り当て開始（要素は1つ）
     field = tk.Label(win, text=_trigger_label(), bg="#0d1016", fg=C_ACCENT, font=f,
                      anchor="w", cursor="hand2", padx=12, pady=10)
-    field.grid(row=1, column=0, sticky="we", padx=20)
+    field.grid(row=3, column=0, sticky="we", padx=20)
     tk.Label(win, text=("↑ ここをクリックして、使いたいキー（Ctrl+Shift+P等の組み合わせ可）か"
                         "マウスボタンを押す" if ja else
                         "Click above, then press a key (combos like Ctrl+Shift+P ok) or mouse button"),
              bg=C_CARD, fg=C_META, font=fs, anchor="w", justify="left",
-             wraplength=320).grid(row=2, column=0, sticky="we", padx=20, pady=(6, 2))
+             wraplength=320).grid(row=4, column=0, sticky="we", padx=20, pady=(6, 2))
 
     def start_capture(*_):
         if state["capturing"]: return
@@ -972,7 +1010,7 @@ def show_settings(root):
     def reset():
         _trigger.update(kind="mouse", value="x"); _bind_trigger(); _save_settings()
         field.config(text=_trigger_label(), fg=C_ACCENT)
-    bf = tk.Frame(win, bg=C_CARD); bf.grid(row=3, column=0, sticky="we", padx=20, pady=(12, 18))
+    bf = tk.Frame(win, bg=C_CARD); bf.grid(row=5, column=0, sticky="we", padx=20, pady=(12, 18))
     round_pill(bf, "既定に戻す（マウス サイド戻る）" if ja else "Reset to default",
                "#2a2f3a", C_NAME, reset, fs).pack(side="left")
     win.columnconfigure(0, weight=1)
@@ -1059,7 +1097,10 @@ def run_tray(root):
 # ---- main ----------------------------------------------------------------
 def main():
     _load_hist()                                               # 保存済み履歴を復元
-    _load_settings()                                           # 保存済みトリガー設定を復元
+    _load_settings()                                           # 保存済み設定を復元
+    if _lang_mode[0] is None:                                  # 初回はPCの言語を既定に
+        _lang_mode[0] = _detect_pc_lang()
+    _apply_lang(_lang_mode[0])                                 # _ui_langへ反映（autoならゲーム追従）
     threading.Thread(target=fetch_rate, daemon=True).start()   # 円レート取得（非同期）
     root = tk.Tk()
     root.withdraw()
