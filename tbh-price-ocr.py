@@ -35,7 +35,7 @@ NAME_REGIONS = [
 ]
 OCR_LANGS     = ["ja", "en"]
 POPUP_SECONDS = 6
-CALIBRATE     = True               # Trueで撮影画像を保存（調整用）
+CALIBRATE     = False              # Trueで撮影画像を保存（調整用）
 DEBUG_UI      = False              # Trueで押下毎に「撮影＋枠＋読取＋結果」を1枚のウィンドウ表示（クリックで閉じる窓）
 # 配色
 C_CARD, C_ACCENT = "#1a1d24", "#2dd4bf"
@@ -103,10 +103,13 @@ except Exception:
     except Exception: pass
 
 matcher = Matcher(os.path.join(RES, "tbh-price-lookup.json"))
+def _edges(bgr):                                            # 色に依存しない枠形状（Cannyエッジ）
+    return cv2.Canny(cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY), 60, 160)
 try:
     _TPL = cv2.imread(os.path.join(RES, "frame_tpl.png"))   # 名前枠の左角テンプレート（定数ピクセル）
+    _TPL_E = _edges(_TPL) if _TPL is not None else None     # 高レア(背景色が変わる)用のエッジ版
 except Exception:
-    _TPL = None
+    _TPL = _TPL_E = None
 PQ = queue.Queue()          # ポップ要求キュー（別スレッド→メインスレッド）
 
 
@@ -198,24 +201,27 @@ def grab(frac):
     return Image.frombytes("RGB", raw.size, raw.bgra, "raw", "BGRX"), (left, top)
 
 
-def _adapt(c):
-    """局所適応二値化（色付き/暗い名前も白黒高コントラスト化）。"""
+def _adapt(c, invert=False):
+    """局所適応二値化（色付き/暗い名前も白黒高コントラスト化）。
+    invert=Trueは高レア等の『明背景＋暗文字』(セレスティアル等のシアンバー)用。"""
     v = c.convert("HSV").split()[2]
     mean = v.filter(ImageFilter.BoxBlur(14))
     a = np.asarray(v, dtype=np.int16); m = np.asarray(mean, dtype=np.int16)
-    return Image.fromarray(((a > m + 8) * 255).astype("uint8"), "L").convert("RGB")
+    cond = (a < m - 8) if invert else (a > m + 8)
+    return Image.fromarray((cond * 255).astype("uint8"), "L").convert("RGB")
 
 
 def _ocr(c):
-    proc = _adapt(c)
     out = []
-    for lang in ("ja", "en"):          # 日本語・英語どちらの表示でも読めるよう両方
-        try:
-            r = winocr.recognize_pil_sync(proc, lang)
-            out.append(" ".join(l.get("text", "") for l in (r.get("lines") if isinstance(r, dict) else []) or []))
-        except Exception:
-            pass
-    return "\n".join(out)   # ja/en読みは改行区切り＝行ごとに照合（二重化での薄まりを防ぐ）
+    # 通常(暗背景+明文字)＋反転(明背景+暗文字=高レアのシアンバー)の両方を読み、行ごとに照合させる
+    for proc in (_adapt(c), _adapt(c, invert=True)):
+        for lang in ("ja", "en"):      # 日本語・英語どちらの表示でも読めるよう両方
+            try:
+                r = winocr.recognize_pil_sync(proc, lang)
+                out.append(" ".join(l.get("text", "") for l in (r.get("lines") if isinstance(r, dict) else []) or []))
+            except Exception:
+                pass
+    return "\n".join(out)   # 各読みは改行区切り＝行ごとに照合（二重化での薄まりを防ぐ）
 
 
 def detect_boxes(img):
@@ -224,9 +230,11 @@ def detect_boxes(img):
     if _TPL is None:
         return []
     arr = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
-    res = cv2.matchTemplate(arr, _TPL, cv2.TM_CCOEFF_NORMED)
+    res = cv2.matchTemplate(arr, _TPL, cv2.TM_CCOEFF_NORMED)        # 色マッチ（通常レア）
+    if _TPL_E is not None:                                          # エッジマッチを合成（高レアは背景色が変わる）
+        res = np.maximum(res, cv2.matchTemplate(_edges(arr), _TPL_E, cv2.TM_CCOEFF_NORMED))
     # 閾値は低め＝枠を取りこぼさない。誤検出はマッチャの確信0.85で除外される。
-    ys, xs = np.where(res >= 0.62)
+    ys, xs = np.where(res >= 0.55)
     peaks = sorted(zip(xs.tolist(), ys.tolist(), res[ys, xs].tolist()), key=lambda p: -p[2])
     picked = []
     for x, y, s in peaks:                       # 同じ枠の重複ピークをまとめる（高スコア順なので最良が残る）
@@ -297,6 +305,7 @@ def show_debug(pim, root):
 
 
 WORKQ = queue.Queue()    # 戻るボタン押下シグナル（常駐ワーカーが処理）
+_last_trig = [0.0]       # 直近の発動時刻（デバウンス用＝二重発動防止）
 
 def ocr_worker():
     """常駐1本のワーカー: OCRエンジンを一度だけ初期化(COM/winrtのスレッド親和性対策)し、
@@ -311,6 +320,8 @@ def ocr_worker():
             while True: WORKQ.get_nowait()      # 連打はまとめて1回に
         except queue.Empty:
             pass
+        if time.time() - _last_trig[0] < 0.6:   # デバウンス：処理中に届いた2発目などの二重発動を無視
+            continue
         try:
             if foreground_exe() != GAME_EXE:
                 continue                        # 他アプリでは何もしない＝「戻る」は普通に効く
@@ -376,6 +387,8 @@ def ocr_worker():
             PQ.put((found, xy, hint))
         except Exception:
             log_fatal("worker error:\n" + traceback.format_exc())
+        finally:
+            _last_trig[0] = time.time()         # 処理完了時刻＝この後0.6秒は再発動を無視
 
 
 # ---- ポップ表示（メインスレッドで） --------------------------------------
