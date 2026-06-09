@@ -60,6 +60,8 @@ Windows実機(Tailscale `ssh tbhwin`, 鍵`~/.ssh/tbh_win`, 配備先`C:\Users\mo
 
 **配信系**: フッターに `v1.1 · by Ghost Shark Robotics`、Ko-fi寄付(`KOFI_URL`)、アプリ内フィードバック(`FEEDBACK_URL`→Cloudflare Worker→Slack, 匿名・返信先任意)。起動時にGitHub最新リリースを確認し新版を控えめ告知。
 
+**利用統計（匿名テレメトリ）** [[marketlens-telemetry]]: `STATS_URL`(=Worker `/ml`)へ `_telemetry_send(ev,item,rarity,err)` が送信。`ev=launch`(main・言語確定後)／`lookup`(found確定時・アイテム英名+rarity_en)／`error`(`log_fatal`本文・`_scrub()`でユーザー名/パス伏字化)。匿名ID `_cid`(uuid4・設定に永続・IP由来でない)。**IP・Steam在庫・個人情報は送らない**(国はWorkerがエッジで付与・IP非保存)。設定→「利用統計」トグル(`_telemetry`, 既定オン)でオフ可。閲覧: `…/mlstats?pw=<DASH_PW>`。dist-READMEに開示済み。
+
 ## 6. i18n
 全UI文字列は `TR[lang][key]` ＋ `T(key, **fmt)` 経由。`LANGS=("ja","en","zh")`。
 日本語直書き禁止。**デプロイ前に `python3 i18n_lint.py`（カタログ完全＋UI日本語漏れ検査）必須**（[[marketlens-i18n]]）。
@@ -72,6 +74,7 @@ Windows実機(Tailscale `ssh tbhwin`, 鍵`~/.ssh/tbh_win`, 配備先`C:\Users\mo
 
 ## 8. 状態（2026-06時点）
 価格本線=search/render切替・印なし表示・該当なし最小表示まで実装＆実機反映済み。
-未了：アプリ内フィードバックのWorker `/feedback`デプロイ（Slack Webhook URL＋Cloudflare認証待ち）／Ko-fi最終確認／v1.1ビルド＆公開（**ユーザー確認後のみ**）／.icoアイコン・告知文・中国語レア度/種別訳。
+匿名テレメトリ(`/ml`+`/mlstats`)をコード実装済み＝ローカル検証(py compile/i18n_lint/node --check)通過。
+未了：**Worker再デプロイ**（`/feedback`+`/ml`の両方。`cd worker && npx wrangler deploy`＝wrangler未ログイン→Cloudflare認証待ち）／Win機へ scp 反映／Ko-fi最終確認／v1.1ビルド＆公開（**ユーザー確認後のみ**）／.icoアイコン・告知文・中国語レア度/種別訳。
 
 関連メモリ: [[tbh-price-ocr-tool]] [[marketlens-i18n]] [[tbh-tools-no-cheat-detection]] [[tbh-price-ocr-tool]] [[verify-before-claiming-fixed]] [[tbh-deploy-to-live]]
