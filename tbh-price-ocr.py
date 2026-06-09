@@ -472,6 +472,20 @@ def _native_price(hash_name, cur, force=False):
     except Exception:
         return (c[1], c[2], c[3]) if c else None
 
+def _usd_no_listing(hash_name, force, cache_only):
+    """USD表示で現在出品なしの時、priceoverview(USD)の中央値を補う（renderは中央値を返さないため、
+    ja/zhと同じく「出品なし＋中央値」を出せるように）。中央値が取れなければ _RENDER_EMPTY。
+    cache_only時はネットを叩かず _price_cache の中央値だけ使う。"""
+    if cache_only:
+        c = _price_cache.get((hash_name, 1))              # (取得time, low, med, vol)
+        if c and c[2] is not None:
+            return None, c[2], c[3], 1
+        return _RENDER_EMPTY
+    nat = _native_price(hash_name, 1, force)              # USD priceoverview（429時はNone/キャッシュ＝穏当に劣化）
+    if nat and nat[1] is not None:
+        return nat[0], nat[1], nat[2], 1                  # lowは大抵None＋medあり → 呼び出し側で「出品なし＋中央値」
+    return _RENDER_EMPTY
+
 def live_price(hash_name, native_ok=False, force=False, cache_only=False):
     """現在価格 → (low, med, vol, src) or None。src=値の通貨ID（1=USD）。
     本線=search/renderの単品USD（5分キャッシュ）。native_ok かつ表示通貨が非USD かつ priceoverview が叩ける時だけ現地通貨に格上げ。"""
@@ -486,14 +500,14 @@ def live_price(hash_name, native_ok=False, force=False, cache_only=False):
         if c: return c[1], c[2], c[3], disp
     rc = _render_cache.get(hash_name)                     # render USD（5分キャッシュ）。sell=None は出品なし
     if rc and not force and now - rc[0] < 300:
-        return _RENDER_EMPTY if rc[1] is None else (rc[1], rc[1], rc[2], 1)
+        return _usd_no_listing(hash_name, force, cache_only) if rc[1] is None else (rc[1], rc[1], rc[2], 1)
     if cache_only:
         if not rc: return None
-        return _RENDER_EMPTY if rc[1] is None else (rc[1], rc[1], rc[2], 1)
+        return _usd_no_listing(hash_name, force, True) if rc[1] is None else (rc[1], rc[1], rc[2], 1)
     rp = _render_price(hash_name)                         # 1リクエスト（BANされない）
     if rp == _RENDER_EMPTY:                                # クエリ成功・出品なし（キャッシュして再取得を抑える）
         _render_cache[hash_name] = (now, None, 0)
-        return _RENDER_EMPTY
+        return _usd_no_listing(hash_name, force, cache_only)   # USDでも中央値はpriceoverviewで補う
     if rp is not None:
         _render_cache[hash_name] = (now, rp[0], rp[1])
         return rp[0], rp[0], rp[1], 1
