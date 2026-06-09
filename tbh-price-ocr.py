@@ -84,6 +84,9 @@ TR = {
                       "履歴：トレイ『履歴一覧』で表示。右クリックでお気に入り・名前変更・レア度・削除、『全部更新』も",
                       "発動キー・表示言語は『設定』で変更",
                       "安全：ゲームには干渉しません（自分の画面OCR＋キーのみ）"],
+        "ocr_missing_title": "文字認識(OCR)の言語が未インストール",
+        "ocr_missing_msg": "このPCに{lang}の文字認識が入っていないため、アイテム名を読み取れません。\nWindowsの「設定 → 時刻と言語 → 言語と地域」で{lang}を追加すると使えるようになります。",
+        "ocr_open_settings": "言語設定を開く",
         "close": "閉じる",
         "tray_key": "キー：", "tray_settings": "設定", "tray_history": "履歴一覧",
         "tray_limit": "履歴の上限", "tray_quit": "終了", "unlimited": "無制限", "items": "{n} 件",
@@ -131,6 +134,9 @@ TR = {
                       "History: open from tray. Right-click a row for Favourite / Rename / Rarity / Delete, plus 'Update all'",
                       "Change the hotkey & language in Settings",
                       "Safe: it never touches the game (screen OCR + hotkey only)"],
+        "ocr_missing_title": "OCR language not installed",
+        "ocr_missing_msg": "{lang} text recognition isn't installed on this PC, so item names can't be read.\nAdd {lang} in Windows Settings → Time & language → Language & region.",
+        "ocr_open_settings": "Open language settings",
         "close": "Close",
         "tray_key": "Key: ", "tray_settings": "Settings", "tray_history": "History",
         "tray_limit": "History limit", "tray_quit": "Quit", "unlimited": "Unlimited", "items": "{n}",
@@ -178,6 +184,9 @@ TR = {
                       "历史：从托盘「历史」打开。右键可收藏·重命名·改品质·删除，并有「全部更新」",
                       "在「设置」中修改触发键和显示语言",
                       "安全：不干预游戏（仅截屏OCR＋按键）"],
+        "ocr_missing_title": "文字识别(OCR)语言未安装",
+        "ocr_missing_msg": "此电脑未安装{lang}的文字识别，无法读取物品名称。\n在 Windows 设置 → 时间和语言 → 语言和区域 中添加{lang}即可使用。",
+        "ocr_open_settings": "打开语言设置",
         "close": "关闭",
         "tray_key": "按键：", "tray_settings": "设置", "tray_history": "历史",
         "tray_limit": "历史上限", "tray_quit": "退出", "unlimited": "无限制", "items": "{n} 条",
@@ -581,6 +590,25 @@ def _ocr(c):
                 pass
     return "\n".join(out)   # 各読みは改行区切り＝行ごとに照合（二重化での薄まりを防ぐ）
 
+_OCR_PRIMARY = {"ja": "ja", "en": "en", "zh": "zh-hans"}   # 表示言語→必須のOCRタグ（先頭一致）
+_ocr_avail = [None]
+def _ocr_available_tags():
+    """このPCで使えるWindows OCRの言語タグ（小文字）。取得は1回だけ。"""
+    if _ocr_avail[0] is None:
+        try:
+            from winrt.windows.media.ocr import OcrEngine
+            _ocr_avail[0] = [l.language_tag.lower() for l in OcrEngine.available_recognizer_languages]
+        except Exception:
+            _ocr_avail[0] = []
+    return _ocr_avail[0]
+
+def _ocr_lang_missing():
+    """現在の表示言語の文字認識がこのPCに無ければTrue。取得失敗時は誤検出回避でFalse。"""
+    tags = _ocr_available_tags()
+    if not tags: return False
+    need = _OCR_PRIMARY.get(_ui_lang, "ja")
+    return not any(t.startswith(need) for t in tags)   # 例: "zh-hans-cn".startswith("zh-hans")
+
 
 def detect_boxes(img):
     """名前枠テンプレートで枠を位置特定し、各枠の (名前＋等級テキスト, 枠中心x, 中心y) を返す。
@@ -855,6 +883,7 @@ _trigger = {"kind": "mouse", "value": SIDE_BUTTON}   # 既定：マウス戻る(
 _trig_hook = [None]                                  # (kind, handler) 解除用
 _set_win = [None]                                    # 設定ウィンドウ
 _help_win = [None]                                   # 使い方ウィンドウ
+_ocrwarn_win = [None]                                # OCR言語未インストールの案内ウィンドウ
 _fb_win = [None]                                     # フィードバックウィンドウ
 _intro_seen = [False]                                # 初回起動の使い方を表示済みか
 
@@ -1668,6 +1697,27 @@ def toggle_history(root):
     else: hide_history()
 
 
+def show_ocr_warn(root):
+    """このPCに表示言語のOCRが無い時、原因と直し方をUIで案内（黙って「該当なし」にしない）。"""
+    if _ocrwarn_win[0] and _ocrwarn_win[0].winfo_exists():
+        _ocrwarn_win[0].deiconify(); _ocrwarn_win[0].lift(); return
+    win = tk.Toplevel(root); win.config(bg=C_CARD); win.attributes("-topmost", True); win.resizable(False, False)
+    win.title(APP_NAME); _ocrwarn_win[0] = win
+    f = tkfont.Font(family="Yu Gothic UI", size=11)
+    lang = LANG_NAMES.get(_ui_lang, _ui_lang)
+    tk.Label(win, text="⚠  " + T("ocr_missing_title"), bg=C_CARD, fg=C_NAME,
+             font=("Yu Gothic UI", 13, "bold"), anchor="w").pack(fill="x", padx=18, pady=(16, 6))
+    tk.Label(win, text=T("ocr_missing_msg", lang=lang), bg=C_CARD, fg=C_META, font=f,
+             justify="left", anchor="w").pack(fill="x", padx=18, pady=(0, 14))
+    bf = tk.Frame(win, bg=C_CARD); bf.pack(fill="x", padx=18, pady=(0, 16))
+    def _open():
+        try: os.startfile("ms-settings:regionlanguage")     # Windowsの言語設定を開く
+        except Exception: pass
+    round_pill(bf, T("ocr_open_settings"), C_ACCENT, "#0c0c0c", _open, f).pack(side="left")
+    round_pill(bf, T("close"), "#2a2f3a", C_NAME, win.destroy, f).pack(side="right")
+    win.bind("<Escape>", lambda e: win.destroy())
+    _grab_foreground(win)
+
 def show_help(root):
     if _help_win[0] and _help_win[0].winfo_exists():
         _help_win[0].deiconify(); _help_win[0].lift(); return
@@ -1768,7 +1818,7 @@ def show_settings(root):
         if _lang_mode[0] == m: return
         _apply_lang(m)
         # 言語が混ざらないよう、開いている副ウィンドウは破棄→次回開いた時に新言語で再生成
-        for w in (_help_win, _fb_win, _hist_win, _hist_inner, _sell_win, _sell_inner):
+        for w in (_help_win, _fb_win, _hist_win, _hist_inner, _sell_win, _sell_inner, _ocrwarn_win):
             if w[0] is not None:
                 try:
                     if hasattr(w[0], "destroy"): w[0].destroy()
@@ -1785,6 +1835,8 @@ def show_settings(root):
         if pos and _set_win[0]:
             try: _set_win[0].geometry(pos)
             except Exception: pass
+        if _ocr_lang_missing():                      # 切替先言語のOCRが無い→その場で案内（黙って読めない、を避ける）
+            root.after(200, lambda: show_ocr_warn(root))
     for m in LANGS:
         on = _lang_mode[0] == m
         round_pill(langf, ("● " if on else "") + LANG_NAMES[m], C_ACCENT if on else "#2a2f3a",
@@ -2284,6 +2336,8 @@ def main():
     if not _intro_seen[0]:                                     # 初回起動：使い方を表示
         _intro_seen[0] = True; _save_settings()
         root.after(700, lambda: show_help(root))
+    if _ocr_lang_missing():                                    # 表示言語のOCRが無い→原因と直し方を案内
+        root.after(1200, lambda: show_ocr_warn(root))
     poll(root)
     root.mainloop()
 
