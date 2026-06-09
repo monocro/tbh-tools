@@ -1268,7 +1268,9 @@ def _scrolling_body(win, inner_w=326):
         frac = (ev.y - 2) / max(1, h - 4) - span / 2  # 掴んだ位置をつまみ中央に
         canvas.yview_moveto(max(0.0, min(1.0 - span, frac)))
     bar.bind("<Button-1>", jump); bar.bind("<B1-Motion>", jump)
-    canvas.pack(side="left", fill="both", expand=True); bar.pack(side="right", fill="y", padx=(2, 0))
+    # 固定幅のバーを先にpackして右端の領域を確保→残りをcanvasがexpandで埋める（順序が逆だと
+    # expandするcanvasが余白を食い、バーの取り分＝幅依存になって「狭いと縦バーが消える」不具合になる）
+    bar.pack(side="right", fill="y", padx=(2, 0)); canvas.pack(side="left", fill="both", expand=True)
     win.bind("<MouseWheel>", lambda e: canvas.yview_scroll(int(-e.delta / 120), "units"))
     for _d in (60, 250):                               # 開いた直後＝レイアウト確定後に必ず一度描く
         canvas.after(_d, redraw)
