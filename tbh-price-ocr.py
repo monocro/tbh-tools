@@ -2198,7 +2198,11 @@ def toggle_sell(root):
 
 # ---- タスクトレイ --------------------------------------------------------
 def tray_image():
-    img = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
+    try:                                              # 同梱の新アイコンを優先（窓/タスクバーと統一）
+        p = os.path.join(RES, "marketlens.png")
+        if os.path.exists(p): return Image.open(p).convert("RGBA")
+    except Exception: pass
+    img = Image.new("RGBA", (64, 64), (0, 0, 0, 0))   # フォールバック（同梱が無い時）
     d = ImageDraw.Draw(img)
     d.rounded_rectangle([4, 4, 60, 60], radius=14, fill=(26, 29, 36, 255),
                         outline=(45, 212, 191, 255), width=3)
@@ -2270,6 +2274,10 @@ def main():
     threading.Thread(target=fetch_rate, daemon=True).start()      # 為替レート（概算フォールバック用）
     root = tk.Tk()
     root.withdraw()
+    try:                                                       # 全Toplevel/タスクバーの既定アイコン
+        _ico = os.path.join(RES, "marketlens.ico")
+        if os.path.exists(_ico): root.iconbitmap(default=_ico)
+    except Exception: pass
     threading.Thread(target=ocr_worker, daemon=True).start()    # OCR常駐ワーカー（初期化1回）
     _bind_trigger()                                             # 設定されたキー/ボタンで発動（既定:マウス戻る）
     threading.Thread(target=run_tray, args=(root,), daemon=True).start()
