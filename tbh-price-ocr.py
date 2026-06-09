@@ -21,7 +21,7 @@ from tkinter import ttk
 
 # ---- 設定 ----------------------------------------------------------------
 APP_NAME      = "TBH MarketLens"
-APP_VERSION   = "1.1"
+APP_VERSION   = "1.1.1"
 APP_AUTHOR    = "Ghost Shark Robotics"
 KOFI_URL      = "https://ko-fi.com/ghostsharkrobotics"        # Ko-fi（空なら寄付ボタン非表示）
 APP_REPO      = "GhostSharkRobotics/tbh-marketlens"           # 更新通知の取得元（GitHub Releases）
@@ -53,6 +53,8 @@ def rarity_color(r):
     # 既定をC_ACCENT(ティール≒Celestialのシアン)にすると、レア度無しの素材が色付き＝紛らわしい→中立グレー
     return RARITY_COLORS.get(r) or C_NORARITY
 _ui_lang = "ja"                    # 直近に判定したゲーム言語（ja/en）
+_suggest_lang = [None]             # 該当なし時に検出した「ゲームの言語」。ポップで切替を促す
+_LANG_NAME = {"ja": "日本語", "en": "English", "zh": "中文"}   # 言語の表示名（どの言語でも同じ）
 # ===== 文言カタログ（全UI文字列はここ＋T()経由。言語追加はLANGSとTRに列を足すだけ） =====
 LANGS = ("ja", "en", "zh")
 LANG_NAMES = {"ja": "日本語", "en": "English", "zh": "中文"}   # 言語自身の表示名（モード非依存のデータ）
@@ -60,7 +62,7 @@ TR = {
     "ja": {
         "low": "最安", "med": "中央値", "lst": "出品", "sold": "売買", "quote": "相場", "sort_added": "追加日", "hist_last": "最終",
         "mkt": "クリックでSteamマーケットを開く", "noprice": "市場価格なし（非取引）", "nolisting": "出品なし",
-        "nomatch": "該当なし", "reading": "🔍 読み取り中…", "read": "読取",
+        "nomatch": "該当なし", "reading": "🔍 読み取り中…", "read": "読取", "lang_switch": "🌐 ゲームは{lang}のよう → 切替",
         "rarity": "等級", "history": "履歴",
         "hist_title": "価格履歴", "update_all": "全部更新", "hist_empty": "まだ履歴がありません",
         "updating": "更新中 {n}/{total}…", "updated": "更新 {t}", "updating_btn": "更新中…",
@@ -111,7 +113,7 @@ TR = {
     "en": {
         "low": "Low", "med": "Median", "lst": "List", "sold": "Sold", "quote": "Updated", "sort_added": "Added", "hist_last": "Last",
         "mkt": "Click to open Steam Market", "noprice": "Not on market", "nolisting": "No listings",
-        "nomatch": "No match", "reading": "🔍 Reading…", "read": "OCR",
+        "nomatch": "No match", "reading": "🔍 Reading…", "read": "OCR", "lang_switch": "🌐 Game looks {lang} → switch",
         "rarity": "Rarity", "history": "History",
         "hist_title": "Price history", "update_all": "Update all", "hist_empty": "No history yet",
         "updating": "Updating {n}/{total}…", "updated": "Updated {t}", "updating_btn": "Updating…",
@@ -162,7 +164,7 @@ TR = {
     "zh": {
         "low": "最低", "med": "中位", "lst": "在售", "sold": "成交", "quote": "行情", "sort_added": "添加", "hist_last": "最近",
         "mkt": "点击打开 Steam 市场", "noprice": "无市场价格（不可交易）", "nolisting": "暂无在售",
-        "nomatch": "无匹配", "reading": "🔍 识别中…", "read": "识别",
+        "nomatch": "无匹配", "reading": "🔍 识别中…", "read": "识别", "lang_switch": "🌐 游戏似乎是{lang} → 切换",
         "rarity": "品质", "history": "历史",
         "hist_title": "价格历史", "update_all": "全部更新", "hist_empty": "暂无历史",
         "updating": "更新中 {n}/{total}…", "updated": "更新 {t}", "updating_btn": "更新中…",
@@ -634,9 +636,9 @@ def _adapt(c, invert=False):
 
 _OCR_LANGS = {"ja": ("ja", "en"), "en": ("en",), "zh": ("zh-Hans", "en")}
 
-def _ocr(c):
+def _ocr(c, lang=None):
     out = []
-    langs = _OCR_LANGS.get(_ui_lang, ("ja", "en"))   # 表示言語に合わせて読む文字種を選ぶ（速度維持）
+    langs = _OCR_LANGS.get(lang or _ui_lang, ("ja", "en"))   # 表示言語に合わせて読む文字種を選ぶ（速度維持）
     # 通常(暗背景+明文字)＋反転(明背景+暗文字=高レアのシアンバー)の両方を読み、行ごとに照合させる
     for proc in (_adapt(c), _adapt(c, invert=True)):
         for lang in langs:
@@ -744,14 +746,15 @@ def detect_frames(img):
     picked = [(int(round(x / ds)), int(round(y / ds)), s) for x, y, s in picked]   # 最後に元解像度へ
     return picked, f
 
-def _ocr_frame(img, x, y, f):
-    """1枠ぶんをOCR→(名前, 等級)。OCR/_adapt は2xベース文字サイズ前提なので 1/f 倍で正規化。"""
+def _ocr_frame(img, x, y, f, lang=None):
+    """1枠ぶんをOCR→(名前, 等級)。OCR/_adapt は2xベース文字サイズ前提なので 1/f 倍で正規化。
+    lang指定で別言語のOCRも可（該当なし時の言語検出に使う）。"""
     Sf = lambda v: int(round(v * f))
     def norm(crop):
         if abs(f - 1.0) > 0.02 and crop.width > 0 and crop.height > 0:
             crop = crop.resize((max(1, int(round(crop.width / f))),
                                 max(1, int(round(crop.height / f)))), Image.LANCZOS)
-        return _ocr(crop)
+        return _ocr(crop, lang)
     name = norm(img.crop((max(0, x - Sf(90)), y + Sf(6), x + Sf(560), y + Sf(56))))    # 枠内＝名前（左に広め＝短名対策）
     rank = norm(img.crop((max(0, x - Sf(90)), y + Sf(56), x + Sf(560), y + Sf(122))))  # 枠直下＝等級
     return name, rank
@@ -907,6 +910,7 @@ def ocr_worker():
             if _lang_mode[0] in LANGS:
                 _ui_lang = _lang_mode[0]
             found, chosen = [], None
+            _suggest_lang[0] = None
             if cands:
                 ax, ay = min(cands, key=lambda c: c[1])[2:4]   # カーソル最近の枠＝指してる位置
                 rad = (80 * scale) ** 2
@@ -914,6 +918,27 @@ def ocr_worker():
                 best = max(same, key=lambda c: c[0])
                 if best[0] >= 0.85:
                     found, chosen = best[4], best
+            if not found and frames and not _dbg:
+                # 該当なし＝表示言語とゲームの言語がズレ、OCRが別言語で読んでいる可能性。
+                # 他の(OCRパックが入っている)言語で最近枠を読み直し、当たればそれがゲームの言語＝切替を提案。
+                avail = _ocr_available_tags()
+                bx, by, sc_t = frames[0]
+                for L in LANGS:
+                    if L == _ui_lang: continue
+                    need = _OCR_PRIMARY.get(L, "")
+                    if avail and not any(t.startswith(need) for t in avail):
+                        continue                              # その言語のOCRが無い→切替ても読めないので提案しない
+                    n2, r2 = _ocr_frame(img, bx, by, scale, lang=L)
+                    if not extract_rarity(r2):
+                        cr = _frame_rarity(img, bx, by, scale)
+                        if cr: r2 = _RMAP_JA[cr]
+                    m2 = matcher.match_item(n2, r2)
+                    if m2 and m2[0]["score"] >= 0.85:        # 別言語で当たった＝ゲームはその言語
+                        sx, sy = ox + bx + oS(250), oy + by + oS(30)
+                        found = m2
+                        chosen = (m2[0]["score"], (sx - xy[0]) ** 2 + (sy - xy[1]) ** 2, sx, sy, m2, bx, by, n2, r2)
+                        _suggest_lang[0] = L                  # ポップで「ゲームは{L}のよう→切替」を出す
+                        break
             if found and chosen and not found[0].get("rarity_en"):
                 # CRAFTING素材等＝データ上レア度無し。ツールチップの実レア度(等級OCR/色)を表示用に補う
                 # ＝価格は素材共通のまま、色とラベルだけ実レア度（例ビヨンド）で出す（found[0]は_collectのdictコピーなので安全）。
@@ -1603,6 +1628,13 @@ def show_popup(results, xy, text, root):
         _hist_visible[0] = True; show_history(root)
     round_pill(btnf, "🕘 " + T("history"),
                "#2a2f3a", C_NAME, open_history, f_meta).pack(side="left", padx=(6, 0))
+    if _suggest_lang[0]:                          # 別言語で当てて復帰した＝ゲームの言語に切替を促す
+        _sl = _suggest_lang[0]
+        def _do_switch(L=_sl):
+            _apply_lang(L)                        # _ui_lang切替＋永続化（次回レンズから通常パスで読める）
+            win.destroy()
+        round_pill(btnf, T("lang_switch", lang=_LANG_NAME.get(_sl, _sl)),
+                   C_WAIT, "#0c0c0c", _do_switch, f_meta).pack(side="left", padx=(6, 0))
     # 閉じる：右上の角に配置（標準的な位置）
     xbtn = tk.Label(content, text="✕", bg=C_CARD, fg=C_META, font=f_meta, cursor="hand2")
     xbtn.place(relx=1.0, x=-10, y=8, anchor="ne")
