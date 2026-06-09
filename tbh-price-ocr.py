@@ -1057,7 +1057,21 @@ def show_popup(results, xy, text, root):
         return
 
     e = results[0] if results else None
-    init_name = disp_name(e) if e else (text or "").strip()
+    if e is None:                                     # 該当なし＝文字化けの生OCRや無関係ボタンを出さず最小表示（該当なし＋履歴だけ）
+        c = tk.Frame(win, bg=C_CARD); c.pack(fill="both", expand=True)
+        tk.Label(c, text=T("nomatch"), bg=C_CARD, fg=C_NAME, font=f_name).pack(padx=20, pady=(16, 8), anchor="w")
+        bf = tk.Frame(c, bg=C_CARD); bf.pack(padx=14, pady=(0, 14), anchor="w")
+        round_pill(bf, "🕘 " + T("history"), "#2a2f3a", C_NAME,
+                   lambda: (_hist_visible.__setitem__(0, True), show_history(root)), f_meta).pack(side="left")
+        xbtn = tk.Label(c, text="✕", bg=C_CARD, fg=C_META, font=f_meta, cursor="hand2")
+        xbtn.place(relx=1.0, x=-10, y=8, anchor="ne")
+        xbtn.bind("<Button-1>", lambda ev: win.destroy())
+        xbtn.bind("<Enter>", lambda ev: xbtn.config(fg=C_NAME))
+        xbtn.bind("<Leave>", lambda ev: xbtn.config(fg=C_META))
+        win.bind("<Escape>", lambda ev: win.destroy())
+        _place(win, xy); _round_corners(win); _keep_on_top(win); _dismiss(win); _open.append(win)
+        return
+    init_name = disp_name(e)
     init_rar = (e.get("rarity_en") if e else "") or ""
     en2ja = {en: ja for en, ja in RARITIES}
     state = {"entry": e, "rarity": init_rar}
