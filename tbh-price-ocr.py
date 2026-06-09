@@ -613,19 +613,20 @@ def _ocr_lang_missing():
 # テンプレ frame_tpl.png は TBH ウィンドウ倍率「2x」で撮影した固定ピクセル＝倍率1.0の基準。
 # ゲームのUI倍率(1x/1.25x/1.5x/2x/3x。解像度で同じ表記でも実ピクセルが変わる)を毎回テンプレ側を
 # リサイズしながら相関が最大の倍率を探して自動追従する。当たった倍率は全クロップ座標に乗せる。
-_SCALE_CACHE = [1.0]      # 直近に当選した倍率（探索の初手＝同じ倍率なら数回の相関で済む）
+_SCALE_CACHE = [1.0]      # 直近に当選した実倍率（探索の初手＝同じ倍率なら相関1回で確定）
 _DBG_LAST    = [(1.0, 0.0)]   # CALIBRATE用：直近検出の (倍率f, テンプレ相関ピーク)
 _SCALE_GRID  = [0.45, 0.5, 0.55, 0.625, 0.7, 0.75, 0.85, 1.0, 1.15, 1.3, 1.5, 1.65]
-_SCALE_STRONG = 0.6       # 近傍がこの相関を超えたら全域スキャンを省く（高速パス）
+_SCALE_STRONG = 0.6       # キャッシュ倍率でこの相関が出れば即確定（倍率不変＝再探索しない高速パス）
+_SEARCH_MAXW = 1100       # スケール探索はこの幅以下へ縮小した画像で行う（3x等の大画像でも相関を軽く）
 
-def _match_at(arr, arr_e, f):
-    """テンプレを倍率fにリサイズして相関マップを返す。f=1.0が2xベース。入らない倍率はNone。"""
-    if abs(f - 1.0) < 1e-6:
+def _match_at(arr, arr_e, tf):
+    """テンプレを倍率tf(画像上の枠の見かけ倍率)にリサイズして相関マップを返す。入らない倍率はNone。"""
+    th, tw = _TPL.shape[:2]
+    if abs(tf - 1.0) < 1e-6:
         tpl, tpl_e = _TPL, _TPL_E
     else:
-        th, tw = _TPL.shape[:2]
-        nw, nh = max(8, int(round(tw * f))), max(8, int(round(th * f)))
-        interp = cv2.INTER_AREA if f < 1.0 else cv2.INTER_CUBIC
+        nw, nh = max(8, int(round(tw * tf))), max(8, int(round(th * tf)))
+        interp = cv2.INTER_AREA if tf < 1.0 else cv2.INTER_CUBIC
         tpl = cv2.resize(_TPL, (nw, nh), interpolation=interp)
         tpl_e = _edges(tpl) if _TPL_E is not None else None
     if tpl.shape[0] >= arr.shape[0] or tpl.shape[1] >= arr.shape[1]:
@@ -635,58 +636,54 @@ def _match_at(arr, arr_e, f):
         res = np.maximum(res, cv2.matchTemplate(arr_e, tpl_e, cv2.TM_CCOEFF_NORMED))
     return res
 
-def _best_scale(arr, arr_e):
-    """枠テンプレの最良倍率を探す。直近当選倍率の近傍を先に試し、弱ければ全域スキャン。"""
-    cached = _SCALE_CACHE[0]
-    order = sorted(set(_SCALE_GRID + [cached]), key=lambda f: abs(f - cached))
-    best_f, best_s = cached, -1.0
-    for f in order:
-        res = _match_at(arr, arr_e, f)
-        if res is None:
+def _best_template_factor(arr, arr_e, grid_tf, cached_tf):
+    """画像上の枠倍率(テンプレ倍率)を探す。まずキャッシュ倍率だけ試し、強ければ即確定(=相関1回)。
+    弱い時だけ全gridを走査。戻り: (tf, peak, 相関マップ)。"""
+    res = _match_at(arr, arr_e, cached_tf)
+    if res is not None and float(res.max()) >= _SCALE_STRONG:
+        return cached_tf, float(res.max()), res       # 倍率変わってない＝再探索不要（高速パス）
+    best_t, best_s, best_res = cached_tf, (float(res.max()) if res is not None else -1.0), res
+    for t in grid_tf:                                 # 倍率が変わった時だけ全候補を走査
+        if abs(t - cached_tf) < 1e-6:
             continue
-        s = float(res.max())
+        r = _match_at(arr, arr_e, t)
+        if r is None:
+            continue
+        s = float(r.max())
         if s > best_s:
-            best_s, best_f = s, f
-        if best_s >= _SCALE_STRONG and abs(best_f - cached) <= 0.16:
-            break                                     # 近傍で十分一致＝倍率変わってない。全域探索は不要
-    # 採用倍率の周りを細かく詰める（クロップ座標を正確に乗せるため）
-    for f in (best_f - 0.08, best_f - 0.04, best_f + 0.04, best_f + 0.08):
-        if f <= 0.2:
-            continue
-        res = _match_at(arr, arr_e, f)
-        if res is None:
-            continue
-        s = float(res.max())
-        if s > best_s:
-            best_s, best_f = s, f
-    return best_f
+            best_s, best_t, best_res = s, t, r
+    return best_t, best_s, best_res
 
 def detect_boxes(img):
-    """名前枠テンプレートで枠を位置特定し、各枠の (名前, 等級テキスト, 枠左上x, 左上y, 一致度) と
-    検出したテンプレ倍率 f を返す。枠は固定ピクセル＝倍率を検出すれば任意のUIスケールに追従できる。"""
+    """名前枠テンプレートで枠を位置特定し、各枠の (名前, 等級, 枠左上x, 左上y, 一致度) と検出倍率 f を返す。
+    スケール探索は縮小画像で行い座標は元解像度へ戻す(速度)。OCRは枠を1/f倍してベース文字サイズへ正規化。"""
     if _TPL is None:
         return [], 1.0
-    arr = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
-    arr_e = _edges(arr) if _TPL_E is not None else None
-    f = _best_scale(arr, arr_e)
+    full = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+    H, W = full.shape[:2]
+    ds = min(1.0, _SEARCH_MAXW / float(W))            # 探索用の縮小率(<=1)。大画像ほど効く
+    if ds < 1.0:
+        small = cv2.resize(full, (max(1, int(W * ds)), max(1, int(H * ds))), interpolation=cv2.INTER_AREA)
+    else:
+        ds, small = 1.0, full
+    small_e = _edges(small) if _TPL_E is not None else None
+    grid_tf = [g * ds for g in _SCALE_GRID]           # 実倍率fの枠は縮小空間でテンプレ倍率 f*ds で一致
+    tf, peak, res = _best_template_factor(small, small_e, grid_tf, _SCALE_CACHE[0] * ds)
+    f = tf / ds                                       # 元解像度での実倍率
     _SCALE_CACHE[0] = f
-    res = _match_at(arr, arr_e, f)
+    _DBG_LAST[0] = (f, peak)
     if res is None:
-        _DBG_LAST[0] = (f, 0.0)
         return [], f
-    _DBG_LAST[0] = (f, float(res.max()))              # CALIBRATE診断用：採用倍率と相関ピーク
-    S = lambda v: int(round(v * f))                   # 2xベースのピクセル定数を検出倍率に合わせる
-    # 閾値は低め＝枠を取りこぼさない。誤検出はマッチャの確信0.85で除外される。
-    ys, xs = np.where(res >= 0.55)
-    peaks = sorted(zip(xs.tolist(), ys.tolist(), res[ys, xs].tolist()), key=lambda p: -p[2])
-    dx, dy = S(420), S(36)
+    Sf = lambda v: int(round(v * f))                  # 元解像度クロップ用（2xベースpx→実px）
+    dx, dy = round(420 * tf), round(36 * tf)          # 重複ピーク間引き（縮小空間px＝枠サイズ比例）
+    ys, xs = np.where(res >= 0.55)                    # 閾値低め＝取りこぼさない。誤検出はマッチャ確信0.85で除外
+    pk = sorted(zip(xs.tolist(), ys.tolist(), res[ys, xs].tolist()), key=lambda p: -p[2])
     picked = []
-    for x, y, s in peaks:                       # 同じ枠の重複ピークをまとめる（高スコア順なので最良が残る）
+    for x, y, s in pk:                          # 同じ枠の重複ピークをまとめる（高スコア順なので最良が残る）
         if all(abs(x - px) > dx or abs(y - py) > dy for px, py, _ in picked):
             picked.append((x, y, s))
         if len(picked) >= 10:
             break
-    out = []
     def ocr_norm(crop):
         # OCR/_adapt は2xベース(f=1.0)の文字サイズ前提（BoxBlur半径も固定）。検出倍率に合わせて
         # crop を 1/f 倍し常にベース相当の文字サイズでエンジンへ渡す＝小さいUI倍率で読めない問題の対策。
@@ -694,10 +691,12 @@ def detect_boxes(img):
             crop = crop.resize((max(1, int(round(crop.width / f))),
                                 max(1, int(round(crop.height / f)))), Image.LANCZOS)
         return _ocr(crop)
-    for x, y, s in picked:
-        name = ocr_norm(img.crop((max(0, x - S(90)), y + S(6), x + S(560), y + S(56))))   # 枠内＝名前（左に広め＝短名対策）
-        rank = ocr_norm(img.crop((max(0, x - S(90)), y + S(56), x + S(560), y + S(122)))) # 枠直下＝等級
-        out.append((name, rank, x, y, s))   # 枠の左上座標とテンプレ一致度も返す
+    out = []
+    for sx, sy, s in picked:
+        x, y = int(round(sx / ds)), int(round(sy / ds))   # 縮小空間→元解像度
+        name = ocr_norm(img.crop((max(0, x - Sf(90)), y + Sf(6), x + Sf(560), y + Sf(56))))   # 枠内＝名前（左に広め＝短名対策）
+        rank = ocr_norm(img.crop((max(0, x - Sf(90)), y + Sf(56), x + Sf(560), y + Sf(122)))) # 枠直下＝等級
+        out.append((name, rank, x, y, s))   # 枠の左上座標(元解像度)とテンプレ一致度も返す
     return out, f
 
 
