@@ -2799,7 +2799,21 @@ def run_tray(root):
 
 
 # ---- main ----------------------------------------------------------------
+_singleton = [None]
+def _already_running():
+    """既に起動中なら True（名前付きミューテックス）。配布版の多重起動（自動起動＋手動/二度押し）を防ぐ。
+    ハンドルはプロセス終了まで保持＝解放しない（保持できなければ判定だけ行う）。"""
+    try:
+        import ctypes
+        k = ctypes.windll.kernel32
+        _singleton[0] = k.CreateMutexW(None, False, "TBH_MarketLens_singleton")
+        return k.GetLastError() == 183             # ERROR_ALREADY_EXISTS
+    except Exception:
+        return False
+
 def main():
+    if _already_running():                                     # 二重起動はここで静かに終了（トレイ/ホットキー重複防止）
+        return
     _load_hist()                                               # 保存済み履歴を復元
     _im = _icon_by_hash()                                       # 既存履歴のアイコンをハッシュから補完
     for _r in _hist:
