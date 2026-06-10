@@ -731,13 +731,72 @@ def _best_template_factor(arr, arr_e, grid_tf, cached_tf):
             best_s, best_t, best_res = s, t, r[0]
     return best_t, best_s, best_res
 
+_BAR_GAP = 48.0          # f=1.0でのバー上下ベゼル中心の間隔（実機実測）＝倍率はここから直接出る
+_BAR_OFF = (39.0, 11.0)  # ベゼル線左端→テンプレ角(bx,by)のオフセット（f=1.0px。検証相関の±12pxで微補正）
+_K1x25 = np.ones((1, 25), np.uint8); _K7x1 = np.ones((7, 1), np.uint8); _K3x3 = np.ones((3, 3), np.uint8)
+
+def _detect_bars(full):
+    """名前バーの構造検出（一次。多倍率テンプレ走査の約100倍速）。
+    等級で変わるのはバー内側の色だけで、細いタン色ベゼル2本(間隔48f)は全等級・全UI倍率で不変。
+    戻り: [(bx, by, f)] テンプレ角座標と倍率の候補（テンプレ1回照合での検証が必要）。"""
+    b = full[..., 0].astype(np.int16); g = full[..., 1].astype(np.int16); r = full[..., 2].astype(np.int16)
+    # ベゼル色 BGR(127,157,182)±45 ＋ 暖色勾配(r>g>b)。±45は縮小描画/AAの色ズレ許容（合成0.5x〜1.5xで実証）
+    m = ((np.abs(b - 127) < 45) & (np.abs(g - 157) < 45) & (np.abs(r - 182) < 45)
+         & (r > g) & (g > b)).astype(np.uint8)
+    horiz = cv2.erode(m, _K1x25)             # 水平に25px以上続く画素だけ＝線
+    thick = cv2.erode(m, _K7x1)              # 縦7px以上の塊（パネル飾り等）はベゼルでない
+    thin = horiz & ~cv2.dilate(thick, _K3x3)
+    n, _l, stats, _c = cv2.connectedComponentsWithStats(cv2.dilate(thin, _K1x25))
+    lines = sorted(((int(s[0]), int(s[1] + s[3] // 2), int(s[2])) for s in stats[1:n]
+                    if s[2] >= 80 and s[3] <= 8), key=lambda l: l[1])
+    out = []
+    for i, (x1, y1, w1) in enumerate(lines):
+        for x2, y2, w2 in lines[i + 1:]:
+            dy = y2 - y1
+            if dy > 110: break                            # y昇順＝以降は離れる一方
+            if dy < 20: continue
+            ov = min(x1 + w1, x2 + w2) - max(x1, x2)
+            if ov < 0.7 * max(w1, w2): continue           # 上下ベゼルは水平に重なる
+            if max(w1, w2) < 4.5 * dy: continue           # 名前バーは横長（実バー比8.7／誤候補3.4を排除）
+            f = dy / _BAR_GAP
+            out.append((x1 - _BAR_OFF[0] * f, y1 - _BAR_OFF[1] * f, f))
+    return out
+
 def detect_frames(img):
     """名前枠の位置だけ検出（OCRしない）。戻り: ([(x, y, 一致度) 元解像度], 検出倍率f)。
-    スケール探索は縮小画像で行い座標は元解像度へ戻す（速度）。OCRは呼び出し側がカーソル最近枠だけに絞る。"""
+    一次＝構造検出(_detect_bars)→確定倍率でテンプレ1回照合の検証（数十ms・等級色/倍率に非依存）。
+    構造検出が0件の時だけ従来の多倍率テンプレ走査にフォールバック（ベゼル遮蔽等の保険）。"""
     if _TPL is None:
         return [], 1.0
     full = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
     H, W = full.shape[:2]
+    th, tw = _TPL.shape[:2]
+    picked, fs = [], []
+    for cx, cy, f in _detect_bars(full):
+        if not (0.2 <= f <= 2.0):
+            continue
+        x0, y0 = max(0, int(cx - 12)), max(0, int(cy - 12))
+        x1, y1 = min(W, int(cx + tw * f + 12)), min(H, int(cy + th * f + 12))
+        roi = full[y0:y1, x0:x1]
+        if roi.shape[0] < 16 or roi.shape[1] < 16:
+            continue
+        mm = _match_at(roi, _edges(roi) if _TPL_E is not None else None, f)
+        if mm is None:
+            continue
+        s = float(mm[0].max())
+        if s < 0.55:
+            continue                                      # 構造は合うが角がテンプレ不一致＝誤候補
+        my, mx = np.unravel_index(int(mm[0].argmax()), mm[0].shape)
+        bx, by = x0 + int(mx), y0 + int(my)
+        if all(abs(bx - px) > 420 * f or abs(by - py) > 36 * f for px, py, _s in picked):
+            picked.append((bx, by, s)); fs.append(f)
+    if picked:
+        f = sorted(fs)[len(fs) // 2]
+        _SCALE_CACHE[0] = f
+        _DBG_LAST[0] = (f, max(s for _x, _y, s in picked))
+        picked.sort(key=lambda p: -p[2])
+        return picked[:10], f
+    # ---- フォールバック：従来の多倍率テンプレ走査（縮小画像で探索し元解像度へ戻す） ----
     ds = min(1.0, _SEARCH_MAXW / float(W))            # 探索用の縮小率(<=1)。大画像ほど効く
     if ds < 1.0:
         small = cv2.resize(full, (max(1, int(W * ds)), max(1, int(H * ds))), interpolation=cv2.INTER_AREA)

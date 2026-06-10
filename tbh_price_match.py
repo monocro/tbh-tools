@@ -117,6 +117,9 @@ class Matcher:
 
     def match_item(self, name_text, rank_text=""):
         """名前で照合してアイテムを特定し、等級行から等級を補って正しい等級のエントリを返す。"""
+        if len(norm(name_text)) < 2:
+            return []   # 名前OCRが空＝照合しない。等級語だけだと最短の「名前+等級」索引キーに
+                        # 化ける（実機で確定: 級[レジェンダリー]だけでPearl s=0.857の誤ポップ）
         r = self.match(name_text)
         if not r:
             r = self.match((name_text + " " + rank_text).strip())
